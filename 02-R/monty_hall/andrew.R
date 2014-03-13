@@ -14,7 +14,6 @@ SingleMonty <- function(){
   } else {
     win <- F
   }
-  print("-------------")
   return(data.frame(switch=as.numeric(switch), win=as.numeric(win)))
 }
 
@@ -31,4 +30,5 @@ FullMonty <- function(plays) {
 plays <- 1000
 results <- FullMonty(plays)
 results_summary <- aggregate(win ~ switch, data=results, FUN=mean)
+print(results_summary)
 
