@@ -32,15 +32,13 @@ numlist <- c(str_extract_all(numlist, '[1-9]'))
 numlist <- unlist(numlist)
 numlist <- as.integer(numlist)
 max_so_far <- 0
-for (i in numlist) {
-  if(i < (length(numlist) - 4)) {
+for (i in 1:(length(numlist) - 4)) {
   	#If you don't know functional programming, Reduce and Map are awesome tools to 
   	#eliminate ugly loops
     product <- Reduce('*', numlist[i:(i + 4)])
     if (product > max_so_far) {
       max_so_far <- product
     }
-  }
 }
 print(max_so_far)
 
