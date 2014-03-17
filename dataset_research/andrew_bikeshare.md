@@ -4,10 +4,10 @@ Capital Bikeshare is a bikeshare system based in Washington DC, Northern Virgini
 ###Uses of system data
 Bikeshare system data has been used in a variety of studies and data visualizations. Below are a few examples:
 
-- What Makes some Bikeshare Stations more Used than Others - Greater Greater Washington [link](http://greatergreaterwashington.org/post/14368/what-makes-some-cabi-stations-more-used-than-others/)
-- CaBi Trip Visualizer [link](http://mvjantzen.com/cabi/trips3q2012.html)
-- Economic Impact & Operational Efficiency for Bikeshare Systems - VTech Graduate Students [link](http://ralphbu.files.wordpress.com/2014/01/virginia-tech-capital-bikeshare-studio-report-2013-final.pdf)
-- The Impact of Weather Conditions on Capital Bikeshare Trips - Gebhart and Noland [link](http://phillymotu.files.wordpress.com/2013/04/the-impact-of-weather-conditions-on-capital-bikeshare-trips.pdf)
+- [What Makes some Bikeshare Stations more Used than Others - Greater Greater Washington](http://greatergreaterwashington.org/post/14368/what-makes-some-cabi-stations-more-used-than-others/)
+- [CaBi Trip Visualizer](http://mvjantzen.com/cabi/trips3q2012.html)
+- [Economic Impact & Operational Efficiency for Bikeshare Systems - VTech Graduate Students](http://ralphbu.files.wordpress.com/2014/01/virginia-tech-capital-bikeshare-studio-report-2013-final.pdf)
+- [The Impact of Weather Conditions on Capital Bikeshare Trips - Gebhart and Noland](http://phillymotu.files.wordpress.com/2013/04/the-impact-of-weather-conditions-on-capital-bikeshare-trips.pdf)
 
 
 ###Getting the data
