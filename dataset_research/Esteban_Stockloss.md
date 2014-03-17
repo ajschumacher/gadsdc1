@@ -5,15 +5,17 @@ What are the structure and contents of your dataset? (Number of records, columns
 [1] 4
 > sum(is.na(stackloss)) #number of missing observations
 [1] 0
+
 What is the history of your dataset (How was it created?)
-“Obtained from 21 days of operation of a plant for the oxidation of ammonia (NH3) to nitric acid (HNO3). 
+> “Obtained from 21 days of operation of a plant for the oxidation of ammonia (NH3) to nitric acid (HNO3). 
 The nitric oxides produced are absorbed in a countercurrent absorption tower”. 
 (Brownlee, cited by Dodge, slightly reformatted by MM.)
 
 Has your dataset been written about? What have others used it for?
-The data was used by Brownlee, K. A. for the publication of
+> The data was used by Brownlee, K. A. for the publication of
 "Statistical Theory and Methodology in Science and Engineering."
 How do you acquire and load the dataset into R? (Include code.)
+
 What are some simple statistics describing the dataset?
 > summary(stackloss)
     Air.Flow       Water.Temp     Acid.Conc.      stack.loss   
