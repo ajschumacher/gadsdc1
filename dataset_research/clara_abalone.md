@@ -35,8 +35,31 @@ The dataset was donated to the UCI Machine Learning Repository in December 1995 
 ## Acquisition
 
 ```
-> abalone.data <- read.csv('http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data', as.is=TRUE)
-> names(abalone.data) <- c('Sex', 'Length', 'Diameter', 'Height', 'Whole weight', 'Shucked weight', 'Viscera weight', 'Shell weight', 'Rings')
+> abalone.data <- read.csv('http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data')
+> names(abalone.data) <- c('sex', 'length', 'diameter', 'height', 'whole.weight', 'shucked.weight', 'viscera.weight', 'shell.weight', 'rings')
 ```
 
 ## Data summary
+```
+Sex          Length         Diameter          Height      
+ F:1307   Min.   :0.075   Min.   :0.0550   Min.   :0.0000  
+ I:1342   1st Qu.:0.450   1st Qu.:0.3500   1st Qu.:0.1150  
+ M:1527   Median :0.545   Median :0.4250   Median :0.1400  
+          Mean   :0.524   Mean   :0.4079   Mean   :0.1395  
+          3rd Qu.:0.615   3rd Qu.:0.4800   3rd Qu.:0.1650  
+          Max.   :0.815   Max.   :0.6500   Max.   :1.1300  
+  Whole weight    Shucked weight   Viscera weight     Shell weight   
+ Min.   :0.0020   Min.   :0.0010   Min.   :0.00050   Min.   :0.0015  
+ 1st Qu.:0.4415   1st Qu.:0.1860   1st Qu.:0.09337   1st Qu.:0.1300  
+ Median :0.7997   Median :0.3360   Median :0.17100   Median :0.2340  
+ Mean   :0.8288   Mean   :0.3594   Mean   :0.18061   Mean   :0.2389  
+ 3rd Qu.:1.1533   3rd Qu.:0.5020   3rd Qu.:0.25300   3rd Qu.:0.3290  
+ Max.   :2.8255   Max.   :1.4880   Max.   :0.76000   Max.   :1.0050  
+     Rings       
+ Min.   : 1.000  
+ 1st Qu.: 8.000  
+ Median : 9.000  
+ Mean   : 9.932  
+ 3rd Qu.:11.000  
+ Max.   :29.000
+ ```
