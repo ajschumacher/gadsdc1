@@ -1,28 +1,16 @@
 #Capital Bikeshare System Data
-
 Capital Bikeshare is a bikeshare system based in Washington DC, Northern Virginia and Maryland. Users can checkout any of the system's bikes, ride for 30 minutes, and dock their bike in any location for no charge. The system has expanded considerably since its inception in 2008 and now includes about 250 docking stations, 2.5K bikes and 40K annual members. Capital Bikeshare makes its usage data available for free on its website [here](http://capitalbikeshare.com/trip-history-data). Each ride is a single observation in the data, and the fields include start and end time, start and end location, bike identifier and membership status.
 
-###Getting the Data
-I was unable to download the data directly from the website with R. Instead I downloaded each quarter's dataset by hand into a directory called 'data'
+###Uses of system data
+Bikeshare system data has been used in a variety of studies and data visualizations. Below are a few examples:
+*[What Makes some Bikeshare Stations more Used than Others - Greater Greater Washington](http://greatergreaterwashington.org/post/14368/what-makes-some-cabi-stations-more-used-than-others/)
+*[CaBi Trip Visualizer](http://mvjantzen.com/cabi/trips3q2012.html)
+*[Economic Impact & Operational Efficiency for Bikeshare Systems - VTech Graduate Students](http://ralphbu.files.wordpress.com/2014/01/virginia-tech-capital-bikeshare-studio-report-2013-final.pdf)
+*[The Impact of Weather Conditions on Capital Bikeshare Trips - Gebhart and Noland](http://phillymotu.files.wordpress.com/2013/04/the-impact-of-weather-conditions-on-capital-bikeshare-trips.pdf)
 
-```shell
-cd data
-ls | cat
-2010-4th-quarter.csv
-2011-1st-quarter.csv
-2011-2nd-quarter.csv
-2011-3rd-quarter.csv
-2011-4th-quarter.csv
-2012-1st-quarter.csv
-2012-2nd-quarter.csv
-2012-3rd-quarter.csv
-2012-4th-quarter.csv
-2013-1st-quarter.csv
-2013-2nd-quarter.csv
-2013-3rd-quarter.csv
-```
 
-From there, the following code reads and appends all the data:
+###Getting the data
+I was unable to download the data directly from the website with R. Instead I downloaded each quarter's dataset by hand into a directory called 'data.' From there, the following code reads and appends all the data:
 
 ```R
 setwd("/Users/andrew/Desktop/Projects/dataset-research")
