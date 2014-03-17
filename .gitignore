@@ -1,1 +1,6 @@
 *~
+# Ignore this file
+.gitignore
+
+# Give myself a local directory to store stuff
+andrew/*
