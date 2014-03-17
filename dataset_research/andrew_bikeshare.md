@@ -24,7 +24,7 @@ ls | cat
 
 From there, the following code reads and appends all the data:
 
-```r
+```R
 setwd("/Users/andrew/Desktop/Projects/dataset-research")
 
 # take a look at each dataset
