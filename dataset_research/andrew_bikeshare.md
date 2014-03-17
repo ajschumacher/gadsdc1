@@ -1,8 +1,8 @@
-###Capital Bikeshare System Data
+#Capital Bikeshare System Data
 
 Capital Bikeshare is bikeshare system that began in Washington, DC in 2008. Different membership levels are available: 1 day, 7 days, 1 year. Members can checkout any of the system's bikes, ride for 30 minutes, and dock their bike in any location for no charge. The system has expanded considerably since its inception and now includes about 250 docking stations, 2.5K bikes and 40K annual members. Capital Bikeshare makes its usage data available for free on its website [here](http://capitalbikeshare.com/trip-history-data). Each ride is a single observation in the data, and the fields include start and end time, start and end location, bike identifier and membership status.
 
-#Getting the Data
+###Getting the Data
 I was unable to download the data directly from the website with R. Instead I downloaded each quarter's dataset by hand into a directory called 'data'
 
 ```shell
@@ -20,4 +20,54 @@ ls | cat
 2013-1st-quarter.csv
 2013-2nd-quarter.csv
 2013-3rd-quarter.csv
+```
+
+From there, the following code reads and appends all the data:
+
+```r
+setwd("/Users/andrew/Desktop/Projects/dataset-research")
+
+# take a look at each dataset
+# store field names in a vector
+files <- list.files('data')
+fields <- c()
+datasets <- list()
+for (f in files) {
+  print(f)
+  quarter_data <- read.csv(paste0('./data/', f), stringsAsFactors=F)
+  print(nrow(quarter_data))
+  datasets <- c(datasets, list(quarter_data))
+  fields <- c(fields, names(quarter_data))
+}
+
+# dealing with field names (this is done somewhat manually)
+fields <- unique(fields)
+clean_fields <- c(
+  'duration', 'start.date', 'end.date', 'start.station', 'end.station', 'bike', 'subscription',
+  'duration.sec', 'start.station', 'start.terminal', 'end.station', 'end.terminal', 'subscription', 
+  'duration.sec', 'start.terminal', 'end.terminal', 'subscription', 'subscription', 'subscription','start.date'
+  )
+
+# append datasets
+trip_history <- NULL
+for (d in datasets) {
+  names(d) <- clean_fields[fields %in% names(d)]
+  if (! "start.terminal" %in% names(d)) {
+    m_start <- rep(NA, nrow(d))
+    m <- regexpr("[0-9]{5}", d$start.station)
+    m_start[m!=-1] <- regmatches(d$start.station, m)
+    d$start.terminal <- m_start
+    m_end <- rep(NA, nrow(d))
+    m <- regexpr("[0-9]{5}", d$end.station)
+    m_end[m!=-1] <- regmatches(d$end.station, m)
+    d$end.terminal <- m_end
+  }
+  if ("duration.sec" %in% names(d)) {
+    d$duration.sec <- NULL
+  }
+  col_sort <- c('duration', 'start.date', 'start.station', 'start.terminal', 'end.date',
+                'end.station', 'end.terminal', 'bike','subscription')
+  d <- d[, col_sort]
+  trip_history <- rbind(trip_history, d)
+}
 ```
