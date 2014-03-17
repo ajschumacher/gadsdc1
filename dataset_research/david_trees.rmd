@@ -1,0 +1,24 @@
+Trees
+========================================================
+This data set provides measurements of the girth, height and volume of timber in 31 felled black cherry trees. Note that girth is the diameter of the tree (in inches) measured at 4 ft 6 in above the ground. 
+
+There are 31 observations on 3 variables. 
+There are 3 columns. 
+There are no missing values. 
+The dataset was created in 1976 as part of the Minitab Student Handbook. It is a well known dataset used as a tutorial for people learning how to use R. 
+
+The dataset is part of the 'datasets' package and is labeled simply as 'trees.'
+
+
+```{r}
+summary(trees)
+```
+```{r}
+structure(trees)
+```
+
+
+```{r fig.width=7, fig.height=6}
+plot(trees)
+```
+
