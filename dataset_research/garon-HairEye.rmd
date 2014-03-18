@@ -1,0 +1,45 @@
+# Hair and Eye Color Dataset in R
+========================================================
+
+The HairEyeColor Dataset is a list of the hair, eye color and sex of 592 students. It originated by a survey of students at the University of Delaware reported by Sneed in 1974.
+
+There are 592 data points that are summarized in a 3-dimensional array produced by cross-tabulating the various observations of the 3 variables.  I can't tell you how confused I was by the 3d structure when I was expecting a simple two dimensions.  But let me try.  
+
+## "I was really confused"
+
+With Tommy's help, it finally kind of makes sense.  The dataset consists of three dimensions:
+
+- Hair
+- Eye
+- Sex
+
+The dataset is already included in R, and the best commands to view and understand the data are:
+
+```{r}
+    str(HairEyeColor)
+    summary(HairEyeColor)
+    HairEyeColor
+```
+
+For those who are used to working with two dimensional data in databases, like I am, this data essentially appears to be stored in two tables, one for Males and one for Females.  The columns and rows in these tables are the possible choices for Hair color and for Eye Color.   
+
+The data in its original format to make it useful for chi squared distributions and other statistical studies, as the R description explains.  As Tommy pointed out, this format would not be called "tidy data", because it is summarized.
+
+But the key function here turned out to be as.data.frame, which made the data usable in a 2d format.
+
+```{r}
+    hairball<-as.data.frame(HairEyeColor)
+    hairball
+```
+
+See, that's data we can understand, and even make a couple of crude plots with.  Such as:
+
+```{r fig.width=7, fig.height=6}
+    plot(hairball$Freq)
+```
+
+```{r fig.width=7, fig.height=6}    
+    boxplot(hairball$Freq ~ hairball$Sex)
+```
+
+dc al fine
