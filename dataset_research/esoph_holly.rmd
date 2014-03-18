@@ -1,0 +1,36 @@
+esoph dataset
+================================================================
+
+The esoph dataset contains data from a case control study in Ille-et-Vilaine, France, that aims to learn a relationship between age, smoking, alcohol and incidence of oesophageal cancer. 
+
+The original research was published in 1977 (in French) by Albert Tuyns and was a seminal work in linking alcohol consumption with oesophageal cancer.  The original paper is cited less than 60 times according to Google Scholar, but the research spurred additional studies and publications in English in the late 70s and early 80s.  Now it appears to be a popular test set for biostatistics classes, and was picked up as a sample R data set from its inclusion in a medical statistics methods book published in 1980.
+
+To load the dataset in R, simply use the data command to create the promise of data and start using.
+
+```{r eval=TRUE}
+data(esoph)
+```
+
+The data summarizes the results of interviews with 200 cancer patients and 975 controls into 88 observations of 5 variables as follows:
+* agegp - subject age bracket
+* alcgp - daily alcohol consumption bracket
+* tobgp - daily tobacco consumption bracket
+* ncases - number of subjects with cancer in this segment of study population
+* ncontrols - number of subjects without cancer in this segment
+
+Testing for NAs reveal no missing values.
+
+```{r}
+sum(is.na(esoph))
+```
+
+summary() is a nice way to compute several test statistics, including histogram values for the descriptive factor variables (age and consumption segments), and mean, max, and min for the numeric variables (number of cases and controls).  
+
+```{r eval=TRUE}
+summary(esoph)
+```
+
+
+Cited source per R documentation: Breslow, N. E. and Day, N. E. (1980) Statistical Methods in Cancer Research. 1: The Analysis of Case-Control Studies. IARC Lyon / Oxford University Press. 
+
+Original Source: Tuyns, A. J., Pequignot, G. and Jensen, O.M. (1977) Le cancer de l'oesophage en Ille et Vilaine en fonction des niveaux de consommation d'alcool et de tabac. Des risques qui se multiplient [Cancer of the Oesophagus in Ille et Vilaine in relation to tobacco and alcohol consumption. Multiplicative risks], *Bulletin du Cancer*, 64, pp.45-60.
