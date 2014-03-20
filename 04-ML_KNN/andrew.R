@@ -4,15 +4,15 @@ Euclidean <- function(x, y) {
 }
 
 Manhattan <- function(x, y) {
-  return(sum(x-y))
+  return(abs(sum(x-y)))
 }
 
-# My K nearest neighbors implementation
-kNN <- function(k, d.train, d.test, lables, dist.function) {
+# My kNN implementation
+kNN <- function(k, d.train, d.test, l.train, dist.function) {
   output <- apply(d.test, 1, FUN=function(x) {
     scores <- apply(d.train, 1, FUN=function(y) { dist.function(y, x) })
     k_rows <- order(scores)[1:k]
-    label <- names(sort(table(labels[k_rows]), decreasing=T))[1]
+    label <- names(sort(table(l.train[k_rows]), decreasing=T))[1]
     return(label)
   })
   return(output)
@@ -33,8 +33,14 @@ l.train <- iris[train_rows, 5]
 d.test <- iris[test_rows, 1:4]
 l.test <- iris[test_rows, 5]
 
-# kNN-ing 
-kNN_Euclidean_5 <- kNN(5, d.train, d.test, labels, Euclidean)
-kNN_Manhattan_5 <- kNN(5, d.train, d.test, labels, Manhattan)
+# Trying it out: k=5
+kNN_Euclidean_5 <- kNN(5, d.train, d.test, l.train, Euclidean)
+kNN_Manhattan_5 <- kNN(5, d.train, d.test, l.train, Manhattan)
 Compare(l.test, kNN_Euclidean_5)
 Compare(l.test, kNN_Manhattan_5)
+
+# Trying it out: k=3
+kNN_Euclidean_3 <- kNN(3, d.train, d.test, l.train, Euclidean)
+kNN_Manhattan_3 <- kNN(3, d.train, d.test, l.train, Manhattan)
+Compare(l.test, kNN_Euclidean_3)
+Compare(l.test, kNN_Manhattan_3)
