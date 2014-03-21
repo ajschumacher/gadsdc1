@@ -1,0 +1,32 @@
+Homemade K Nearest Neighbor Program
+========================================================
+
+This is an attempt to create a program to determine the K Nearest Neighbor for a set of test data.  It uses the time-worn Iris dataset to prove the concept. 
+For me, learning R is a struggle to understand, visualize, and internalize the concepts of vectors, arrays, and dataframes.  I can see how powerful they are, but as I struggle with syntax and concepts of the new language, I am just not truly grasping them yet.  This code then, is more old, procedural language than the shiny new dataframe style of programming.
+
+On the plus side, the KNN is effective in predicting the label based on the features (see, did learn some new lingo).
+
+After I turn this in I will look at other solutions and talk to people who are brighter than I so I can use the apply statement and vectorize this code a little more.  Perhaps I will also make the output and the markdown document prettier.
+
+```{r}
+tmp.df <- iris[sample(1:150,150),]
+tng.df <- tmp.df[1:120,]
+tst.df <- tmp.df[121:150,]
+for ( j in 1:nrow(tst.df)) {
+  mydist <- 1000
+  for ( i in 1:nrow(tng.df)) {
+      distance <- sqrt(sum((tst.df[j,1:4]-tng.df[i,1:4])**2))
+      true_flower <- tst.df[j,"Species"]
+      if (distance < mydist) {
+          assgn_flower <- tng.df[i,"Species"]
+          mydist <- distance
+          print(mydist) 
+          print("assigned flower")
+          print(assgn_flower)
+          print("true flower")
+          print(true_flower)
+      }
+    }
+}
+```
+
