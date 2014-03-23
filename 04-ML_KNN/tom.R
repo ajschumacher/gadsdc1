@@ -29,9 +29,10 @@ RunKNN_merge <- function(mydata){
     knn_one <- function(test_data, training_data) {
         test_data$key <- seq_along(test_data[,1])
         big_df <- merge(training_data, test_data, by=NULL, all=TRUE)
-        big_df$distance <- apply(big_df[,c(1:4,6:9)], 1, function(x){
-            dist(rbind(c(x[1:4]), c(x[5:8])))
-        })
+        big_df$distance <- sqrt((big_df[,1]-big_df[,6])^2 + 
+            (big_df[,2]-big_df[,7])^2 + 
+            (big_df[,3]-big_df[,8])^2 + 
+            (big_df[,4]-big_df[,9])^2)
         index <- aggregate(distance ~ key, data=big_df, which.min)
         return(big_df$Species[index$distance])
     }
@@ -45,7 +46,12 @@ cat("Normalized Result: ", mean(norm_result), fill=TRUE)
 cat("Non-normed Result: ", mean(reg_result), fill=TRUE)
 
 system.time(replicate(20, RunKNN_apply(normalized_data)))
-system.time(replicate(20, RunKNN_merge(normalized_data)))
-## RunKNN_merge runs a lot slower in R.  Sadfase.
+system.time(replicate(20, RunKNN_merge(normalized_data)))  
 
-
+# > system.time(replicate(20, RunKNN_apply(normalized_data)))
+   # user  system elapsed 
+   # 4.56    0.00    4.57 
+# > system.time(replicate(20, RunKNN_merge(normalized_data)))
+   # user  system elapsed 
+   # 0.90    0.00    0.89 
+## BOOYA!
