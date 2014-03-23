@@ -8,15 +8,32 @@
 # The function should return a vector of predicted labels for the test data. 
 # Choose a function name and a distance metric to use. 
 # You can test your function with the iris data.
-train_iris['KNN'] <- NA
-train_iris['KNN']
-#currently, knn_function just returns the shortest distance computed.  
-#Need to modify it to return the actual row from which the shortest distance
-#is computed.  
-knn_function <- function(tst_iris, trn_iris) {
-  apply(tst_iris, 1, function(tst_row) {
-  return(min(apply(trn_iris, 1, function(trn_row) {
-    return(sqrt(sum((tst_row[1:4] - trn_row[1:4])**2)));
-    })))
-  })
+
+# Define a function as described to implement 1NN
+
+first_nearest_neighbor <- function(training_data, labels, test_data) {
+
+	euc_distance <- function(a, b){
+	  dist <- sqrt(sum((a - b)**2))
+	}
+
+
+	test_labels <- as.character(seq_len(nrow(test_data)))
+
+	for (test_row in 1:nrow(test_data)) {
+	  	
+	  	dist_list <- apply(training_data, 1, function(a,b) {
+	    			euc_distance(a,b); 
+	    		} , test_data[test_row,] 
+		)
+    nn.index <- match(min(dist_list), dist_list)
+    
+    test_labels[test_row] <- labels[nn.index]
+    #Uncomment above line to turn in function after testing.  
+    #test_labels[test_row] <- iris$Species[nn.index]
+    	
+	}
+
+	return(test_labels)
+
 }
