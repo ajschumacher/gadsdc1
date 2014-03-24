@@ -15,11 +15,6 @@ get_distance<-function(x,y){
 }
 
 
-min_finder<-function(x){
-  which.min(x)
-}
-
-
 knn <- function(to_guess, testing){
   all_distances<-apply(testing, 1, get_distance, y = to_guess[1,])
   for (x in 2:nrow(to_guess))
@@ -30,8 +25,12 @@ knn <- function(to_guess, testing){
     
   }
   all_distances<-cbind(all_distances,testing.labels)
-  each.min <- apply(all_distances[,1:75],2,which.min)
-  guessed <- cbind(to_guess, testing.labels[each.min])
+  classification <- testing.labels[apply(all_distances[,1:75],2,which.min)]
+  guessed <- cbind(to_guess, classification)
   return (guessed)
 }
 
+how_did_it_do<-function(){
+  guessed<-cbind(guessed, to_guess.labels)
+  sum(guessed['classification']==guessed['to_guess.labels'])/nrow(guessed)
+}
