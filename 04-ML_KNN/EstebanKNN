@@ -10,3 +10,8 @@ test_data[i,5] <-SortedDist[1,2]
 print(test_data)
 }
 KNN(training_data,labels,test_data)
+
+Distance <- matrix(NA,1:75,1)
+training_data <- (iris[1:75,1:5])
+test_data <- (iris[76:150,1:4])
+labels <- data.frame(iris[1:75,5])
