@@ -30,7 +30,8 @@ knn <- function(to_guess, testing){
     
   }
   all_distances<-cbind(all_distances,testing.labels)
-  each_min <- apply(all_distances[1:75], 2, which.min)
-  
+  each.min <- apply(all_distances[,1:75],2,which.min)
+  guessed <- cbind(to_guess, testing.labels[each.min])
+  return (guessed)
 }
 
