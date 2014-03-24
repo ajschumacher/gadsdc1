@@ -5,25 +5,32 @@ iris.rows<-1:nrow(iris)
 iris2.rows<-iris.rows[-sort(iris1.rows)]
 
 to_guess<-iris[iris1.rows,1:4]
-testing <-iris[iris2.rows,]
-labels <-iris[iris1.rows,5]
+testing <-iris[iris2.rows,1:4]
+to_guess.labels <-iris[iris1.rows,5]
+testing.labels<-iris[iris2.rows,5]
 
-
-nested_dude<-function(x,y){
+get_distance<-function(x,y){
   distance<-dist(rbind(x,y))
-  return(distance)
+  return(distance) 
 }
+
+
+min_finder<-function(x){
+  which.min(x)
+}
+
+
 knn <- function(to_guess, testing){
-  distances<-vector("double",0)
-  current_distance <- vector("double",0)
-
-  for (x in nrow(to_guess)){
-
-    current_distance<-rbind(current_distance,apply(testing[,1:4], 1, nested_dude, y = to_guess[x,]))
-
-    min_distance<-which.min(current_distance)
-    distances<-rbind(distances, min_distance)
+  all_distances<-apply(testing, 1, get_distance, y = to_guess[1,])
+  for (x in 2:nrow(to_guess))
+    {
+    #this now returns an array where each column represents one of the rows from the
+    #to_guess set, and its row value is how far it is from that row in testing. 
+    all_distances <- cbind(all_distances, apply(testing, 1, get_distance, y = to_guess[x,]))
+    
   }
-  return (distances)
+  all_distances<-cbind(all_distances,testing.labels)
+  each_min <- apply(all_distances[1:75], 2, which.min)
+  
 }
 
