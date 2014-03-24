@@ -21,5 +21,5 @@ index <- sample(1:125, 100)
 traindata <- sample(1:125, 100)
 trainlabels <- iris[index, 1:4]
 testdata <- iris[index, 1:4]
-
-
+iristestlabels <- jessknn(traindata, trainlabels, testdata)
+ 
