@@ -1,0 +1,17 @@
+KNN <- function(training_data, labels, test_data){
+for (i in 1:nrow(training_data)){
+  for(k in 1:nrow(test_data)){
+  Distance[k]=sqrt(sum((training_data[k,1:4]-test_data[i,1:4])**2))
+}
+Dist.labled <- cbind(Distance,labels)
+SortedDist <-Dist.labled[order(New) ,]
+test_data[i,5] <-SortedDist[1,2]
+}
+print(test_data)
+}
+KNN(training_data,labels,test_data)
+
+Distance <- matrix(NA,1:75,1)
+training_data <- (iris[1:75,1:5])
+test_data <- (iris[76:150,1:4])
+labels <- data.frame(iris[1:75,5])
