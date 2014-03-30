@@ -2,9 +2,9 @@
 
 ##Introducing the CFPB’s consumer complaint database##
 
-The [Consumer Financial Protection Bureau][http://www.consumerfinance.gov] operates a database of consumer complaints about a variety of different financial products and services (most commonly: mortgage, debt collection and credit reporting). Consumers can submit their complaints online, over the phone or by snail-mail -- and so far close to 300,000 individual complaints have been registered!
+The [Consumer Financial Protection Bureau](http://www.consumerfinance.gov) operates a database of consumer complaints about a variety of different financial products and services (most commonly: mortgage, debt collection and credit reporting). Consumers can submit their complaints online, over the phone or by snail-mail -- and so far close to 300,000 individual complaints have been registered!
 
-What makes the complaint system unique is that the CFPB then requires a company to respond to the consumer in a specific timeframe (usually 15-45 days), and then buckets the response into several categories (i.e. complaint resolved in favor of consumer with monetary relief, complaint resolved without monetary relief, complaint closed, etc.). Most of this data, in turn, is put online in a de-identified, publicly accessible database ([check it out!][http://www.consumerfinance.gov/complaintdatabase/]). 
+What makes the complaint system unique is that the CFPB then requires a company to respond to the consumer in a specific timeframe (usually 15-45 days), and then buckets the response into several categories (i.e. complaint resolved in favor of consumer with monetary relief, complaint resolved without monetary relief, complaint closed, etc.). Most of this data, in turn, is put online in a de-identified, publicly accessible database ([check it out!](http://www.consumerfinance.gov/complaintdatabase/)). 
 
 ##That's cool, but why should we care?##
 
