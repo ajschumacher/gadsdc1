@@ -8,7 +8,7 @@ Manhattan <- function(x, y) {
 }
 
 # My kNN implementation
-kNN <- function(k, d.train, d.test, l.train, dist.function) {
+kNN <- function(d.train, d.test, l.train, k, dist.function) {
   output <- apply(d.test, 1, FUN=function(x) {
     scores <- apply(d.train, 1, FUN=function(y) { dist.function(y, x) })
     k_rows <- order(scores)[1:k]
