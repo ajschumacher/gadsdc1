@@ -1,5 +1,6 @@
 # clear some space
 rm(list=ls())
+library(class)
 
 # bring in my kNN implementation
 kNN <- function(d.train, d.test, l.train, k, dist.function) {
@@ -38,10 +39,13 @@ nFoldCrossVal <- function(data, labels, n, CLASS, ...) {
   return(final_score)
 }
 
-
-nFoldCrossVal(iris[, 1:4], iris[, 5], 10, knn, k=3, dist.function=Euclidean)
+# get a vector of accuracies for k=1:40 and plot
 accuracies <- sapply(1:40, function(x) {
   a <- nFoldCrossVal(iris[, 1:4], iris[, 5], 10, kNN, k=x, dist.function=Euclidean)
   return(a)
 })
 plot(1:40, accuracies)
+
+# presumably this could be generalized to other classification functions
+# so long as those classification functions can operate within the sapply
+# context.
