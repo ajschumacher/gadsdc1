@@ -1,0 +1,63 @@
+K Nearest Neighbor Implementation
+===
+
+*Requirements*
+
+Implement a one-nearest-neighbor algorithm as a function in R that takes three arguments:
+  
+- A data frame of numeric columns, the training data.
+- A vector of labels for the training data.
+- A data frame with the same columns as the first data frames, this one the data to predict for.
+
+The function should return a vector of predicted labels for the test data.
+
+```{r}
+#import library with iris data
+library(ggplot2)
+```
+
+
+getDist <- function(){
+  print(x)
+  d <- abs(iris - x)
+  print(d)
+
+}
+u <- c(1,2,3,4,5,6,7,8) - c(4,3,2,1)
+
+```{r}
+#create test data set from beginning of iris
+small <- head(iris)
+
+#get matrix of distances for each value. Will result in matrix of columns that contain the distance against each point
+#[1,1] will be row 1's first value against itself
+#[4,1] will be observation 1's fourth value against itself
+#[5,1] will be observations 1's first value agianst observation 2's first value
+#[1,2] will be observation 2's first value against obsevation 1's first value
+what <- apply(small[,1:4], 1, function(y) apply(small[,1:4], 1, function(x) print(x-y)))
+print(what)
+```
+Now I'm stuck. I need to compress the data by summing every four rows column wise so that [1,1] is the total distance of 1 from 1; [1,2] is the total distance of 1 from 2; [2,4] is the total distance of 2 from 4. 
+
+Searching the internet I found the by, seq and cut functions that may help me but I am unable to get to work.
+
+```{r}
+#try to apply to each column of what a function that sums the colum by 
+apply(what, 2, function(c) by(c, c[seq(from=1,to=24,by=4),], sum))
+
+#forget where on the internet I read about this one
+colsums(what(v, nrow=4))
+
+#only does all of small vs the first in iris
+apply(small[,1:4],1, function(x) x-iris[1,1:4])
+
+#attempting to get indicies where the cut needs to take place
+y<- 1:100
+seq(from = 1, to = 24, by =4)
+
+start <- seq(0,24,4)
+#end <
+
+#try to implement cut but cut creates weird floating cuts
+apply (what, 2, function(c) by (c, cut(1:24, 4), sum))
+```
