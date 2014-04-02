@@ -1,5 +1,5 @@
 # this needs to be reset depending on where this is run
-setwd('/Users/andrew/Desktop/Projects/gadsdc1/06-naive_bayes/classifier/andrew')
+setwd('C:/Users/linville_a/Desktop/gadsdc1/06-naive_bayes/classifier/andrew')
 
 rm(list=ls())
 library(tm)
@@ -14,61 +14,77 @@ getTDM <- function(path, tdm_control) {
 
 # build training set of features
 buildTrain <- function(tdm_pos, tdm_neg) {
+  
+  # vector of positive occurences
   occ_pos <- apply(as.matrix(tdm_pos), 1, function(x) {
     length(x[x > 0]) / length(x)
   })
-  df_pos <- data.frame(names=rownames(tdm_pos), pos=as.numeric(occ_pos))
+  names(occ_pos) <- rownames(tdm_pos)
+  
+  # vector of negative occurences
   occ_neg <- apply(as.matrix(tdm_neg), 1, function(x) {
     length(x[x > 0]) / length(x)
   })
-  df_neg <- data.frame(names=rownames(tdm_neg), neg=as.numeric(occ_neg))
-  print(typeof(df_neg$neg))
-  df_train <- merge(x=df_pos, y=df_neg, by=c('names'))
-  df_train$prob <- (df_train$pos + df_train$neg) / 2
-  df_train$spam_prob <- df_train$pos / (df_train$pos + df_train$neg)
-  return(df_train)
+  names(occ_neg) <- rownames(tdm_neg)
+  
+  # combine occurences in a list and return
+  occ_list <- list('pos'=occ_pos, 'neg'=occ_neg)
+  return(occ_list)
 }
 
 # classification function to opearte on a single test message
-classifyEmail <- function(path, tdm_control, model, prior, d_val=0.5, n=10) {
+classifyEmail <- function(path, tdm_control, model, prior, d_val=0.5) {
+  
   # read in message to vector
   con = file(path, open="rt", encoding="latin1")
   text = paste(readLines(con), collapse="\n")
   close(con)
   
-  # create the tdm
+  # create the tdm and extract words
   tdm <- TermDocumentMatrix(Corpus(VectorSource(text)), tdm_control)
   words <- rownames(tdm)
   
-  # df of spam probs
+  # prob spam
   probs_spam <- sapply(words, function(x) {
-    if (nrow(model[model$names==x, ]) > 0){
-      return(model[model$names==x, c('spam_prob')])
-    } else {
+    if (is.na(model$pos[x])) {
       return(d_val)
+    } else {
+      return(model$pos[x])
     }
   })
+  prob_spam <- prod(probs_spam) * prior
   
-  # df of probs
-  probs <- sapply(words, function(x) {
-    if (nrow(model[model$names==x, ]) > 0){
-      return(model[model$names==x, c('prob')])
-    } else {
+  # prob ham
+  probs_ham <- sapply(words, function(x) {
+    if (is.na(model$neg[x])) {
       return(d_val)
+    } else {
+      return(model$neg[x])
     }
   })
+  prob_ham <- prod(probs_ham) * prior
   
-  # subset to top_n spam_probs and probs
-  interest_spam <- abs(probs_spam - 0.5)
-  top_n <- order(interest_spam, decreasing=TRUE)
-  probs_spam <- probs_spam[top_n]
-  probs <- probs[top_n]
-  
-  # bayesian formula
-  result <- (prod(probs_spam) * prior)
+  # compare spam and ham probs and return
+  result <- as.numeric(prob_spam > prob_ham)
   return(result)
 }
 
+# wrapper on classifyEmail to operate on a full directory of emails
+classifySet <- function(path, tdm_control, model, prior, d_val=0.000001) {
+  
+  # get emails into a list
+  emails <- list.files(path)
+  
+  # apply across email for vector of results
+  result <- sapply(emails, function(x) {
+    email_path= paste0(path, x)
+    is_pos <- classifyEmail(email_path, tdm_control, model, prior, d_val)
+    return(is_pos)
+  })
+  
+  # return
+  return(result)
+}
 
 tdm_control <- list(stopwords = T, removePunctuation = T, removeNumbers = T, minDocFreq = 2)
 w_dir <- getwd()
@@ -79,6 +95,15 @@ spam_tdm <- getTDM(path=spam_path, tdm_control=tdm_control)
 model <- buildTrain(spam_tdm, easy_ham_tdm)
 
 hard_ham_path <- c(paste0(w_dir, '/emails/hard_ham/'))
-test_email <- paste0(hard_ham_path, list.files(hard_ham_path)[1])
-print(test_email)
-classifyEmail(path=test_email, tdm_control=tdm_control, model=model, prior=0.5)
+result <- classifySet(path=hard_ham_path, tdm_control=tdm_control, model=model, prior=0.5)
+
+#summarizing the results
+mean(result)
+# 0.004
+
+length(result)
+# 250
+
+sum(is.na(result))
+# 0
+
