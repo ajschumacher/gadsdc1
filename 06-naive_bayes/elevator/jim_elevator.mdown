@@ -1,0 +1,14 @@
+Predicting Baseball Injury
+==========================
+
+Forecasts for baseball team records are fairly good. For example
+the PECOTA forecasts created by Nate Silver at Baseball Prospectus
+had the following success rates (courtesy of Wikipedia)
+
+>A summary for the 2003 through 2007 seasons shows that PECOTA's average error between the predicted and actual team wins declined:[38] 2003 5.91 wins; 2004 7.71 wins; 2005 5.14 wins; 2006 4.94 wins; 2007 4.31 wins. Silver conjectures that the improvement has come in part from taking defense into account in the forecasts beginning in 2005. In 2008 the average error was 8.5 wins. (http://vegaswatch.net/2009/02/taking-over-on-pecota.html)
+
+A [recent article on Fivethirtyeight] (http://fivethirtyeight.com/features/the-imperfect-pursuit-of-a-perfect-baseball-forecast/) in fact mentions that even the best prediction systems will have, at best, a 6.4 RMSE. That is, even a a forecasting system which knows exactly the 'true' talent level of a baseball team will still miss 6.4 games worth of random variation.
+
+One source of confounding information for forecasting systems is player injury. Player injury is not well understood. Some people argue for various anecdotal explanations of particular types of injury [see the Verducci effect and an argument against it] (http://www.baseballprospectus.com/article.php?articleid=19497)
+
+Some [analysis] (http://makenolittleplans.net/age-position-and-injury-risk-in-baseball/) already exists. My idea is to expand upon existing work and attempt to create a linear regression which predicts, for a given player, the number of days that player will be on the disabled list.
