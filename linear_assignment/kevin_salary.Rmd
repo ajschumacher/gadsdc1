@@ -1,0 +1,268 @@
+Linear Regression Assignment
+========================================================
+
+This is my attempt at the [linear regression assignment](https://github.com/ajschumacher/gadsdc/tree/master/linear_assignment) from the General Assembly Data Science course, which is based on the [Job Salary Prediction competition](http://www.kaggle.com/c/job-salary-prediction) on Kaggle.
+
+You can [view the HTML version on RPubs](http://rpubs.com/justmarkham/linear-regression-salary).
+
+We will first read in the training data, and convert some columns into factors:
+
+```{r}
+train <- read.csv("train.csv", as.is=TRUE)
+train$ContractType <- as.factor(train$ContractType)
+train$ContractTime <- as.factor(train$ContractTime)
+train$Category <- as.factor(train$Category)
+train$SourceName <- as.factor(train$SourceName)
+train$Company <- as.factor(train$Company)
+train$LocationNormalized <- as.factor(train$LocationNormalized)
+```
+
+### Data Exploration
+
+Let's do two quick visualizations, to check that ContractType and ContractTime do have an effect on SalaryNormalized:
+
+```{r}
+library(ggplot2)
+ggplot(train, aes(SalaryNormalized)) + geom_bar() + facet_grid(ContractType ~ .)
+ggplot(train, aes(SalaryNormalized)) + geom_bar() + facet_grid(ContractTime ~ .)
+```
+
+Those both look useful. Next, let's run some simple stats on Category and SourceName:
+
+```{r}
+tapply(train$SalaryNormalized, train$Category, mean)
+table(train$Category)
+tapply(train$SalaryNormalized, train$SourceName, mean)
+table(train$SourceName)
+```
+
+Both could be useful, though I'll probably stay away from SourceName since there are many sources that only have a few observations. Next, let's look at Company and LocationNormalized:
+
+```{r results='hide'}
+# output suppressed
+table(train$Company)
+table(train$LocationNormalized)
+```
+
+Way too many. I'm going to stay away from these.
+
+### Creating New Features
+
+I want to use location_tree.txt to create a much more broad location feature:
+
+```{r}
+con <- file("location_tree.txt", "r")
+tree <- readLines(con)
+close(con)
+
+for(i in 1:nrow(train)) {
+    # get city name
+    loc <- train$LocationNormalized[i]
+    # find the first line in the tree in which that city name appears
+    line.id <- which(grepl(loc, tree))[1]
+    # use regular expressions to pull out the broad location
+    r <- regexpr("~.+?~", tree[line.id])
+    match <- regmatches(tree[line.id], r)
+    # store the broad location
+    train$Location[i] <- gsub("~", "", match)
+}
+
+train$Location <- as.factor(train$Location)
+table(train$Location)
+```
+
+I'm also going to make a simpler London vs non-London feature, to see if that performs better:
+
+```{r}
+train$London <- as.factor(ifelse(train$Location=="London", "Yes", "No"))
+```
+
+Let's add some text features:
+
+```{r}
+train$TitleSenior <- as.factor(ifelse(grepl("[Ss]enior", train$Title), "Yes", "No"))
+train$TitleManage <- as.factor(ifelse(grepl("[Mm]anage", train$Title), "Yes", "No"))
+train$DescripSenior <- as.factor(ifelse(grepl("[Ss]enior", train$FullDescription), "Yes", "No"))
+train$DescripManage <- as.factor(ifelse(grepl("[Mm]anage", train$FullDescription), "Yes", "No"))
+```
+
+Enough feature engineering... let's do some modeling!
+
+### Modeling: Intercept-only
+
+Since the number of observations is large, I'll split the training data into a training set and validation set:
+
+```{r}
+set.seed(100)
+train.index <- sample(10000, 7000, replace=FALSE)
+tr <- train[train.index, ]
+val <- train[-train.index, ]
+```
+
+Let's check the RMSE for a model fit with just an intercept:
+
+```{r}
+sqrt(mean((mean(tr$SalaryNormalized) - val$SalaryNormalized)^2))
+```
+
+### Modeling: Linear Models
+
+Let's create some simple linear models, and add more features each time to see how it affects RMSE:
+
+```{r}
+lm.fit1 <- lm(SalaryNormalized ~ ContractType+ContractTime+Category, data=tr)
+summary(lm.fit1)
+lm.pred1 <- predict(lm.fit1, newdata=val)
+sqrt(mean((lm.pred1-val$SalaryNormalized)^2))
+
+lm.fit2 <- lm(SalaryNormalized ~ ContractType+ContractTime+Category+Location, data=tr)
+summary(lm.fit2)
+lm.pred2 <- predict(lm.fit2, newdata=val)
+sqrt(mean((lm.pred2-val$SalaryNormalized)^2))
+
+lm.fit3 <- lm(SalaryNormalized ~ ContractType+ContractTime+Category+London, data=tr)
+summary(lm.fit3)
+lm.pred3 <- predict(lm.fit3, newdata=val)
+sqrt(mean((lm.pred3-val$SalaryNormalized)^2))
+
+lm.fit4 <- lm(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=tr)
+summary(lm.fit4)
+lm.pred4 <- predict(lm.fit4, newdata=val)
+sqrt(mean((lm.pred4-val$SalaryNormalized)^2))
+```
+
+Interesting! Adding "Location" helped, but using "London" instead of "Location" was even better. And, those four text features helped a lot, too.
+
+### Modeling: Ridge Regression
+
+Let's try ridge regression using the features from the best linear model:
+
+```{r}
+# build model matrices for train and validation
+library(glmnet)
+x.tr <- model.matrix(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=tr)[, -1]
+y.tr <- tr$SalaryNormalized
+x.val <- model.matrix(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=val)[, -1]
+y.val <- val$SalaryNormalized
+
+# CV to obtain best lambda
+set.seed(10)
+rr.cv <- cv.glmnet(x.tr, y.tr, alpha=0)
+plot(rr.cv)
+rr.bestlam <- rr.cv$lambda.min
+rr.goodlam <- rr.cv$lambda.1se
+
+# predict validation set using best lambda and calculate RMSE
+rr.fit <- glmnet(x.tr, y.tr, alpha=0)
+plot(rr.fit, xvar = "lambda", label = TRUE)
+rr.pred <- predict(rr.fit, s=rr.bestlam, newx=x.val)
+sqrt(mean((rr.pred - y.val)^2))
+```
+
+Ridge regression did about the same as the best linear model.
+
+### Modeling: Lasso
+
+Next, let's try the lasso:
+
+```{r}
+# CV to obtain best lambda
+set.seed(10)
+las.cv <- cv.glmnet(x.tr, y.tr, alpha=1)
+plot(las.cv)
+las.bestlam <- las.cv$lambda.min
+las.goodlam <- las.cv$lambda.1se
+
+# predict validation set using best lambda and calculate RMSE
+las.fit <- glmnet(x.tr, y.tr, alpha=1)
+plot(las.fit, xvar = "lambda", label = TRUE)
+las.pred <- predict(las.fit, s=las.bestlam, newx=x.val)
+sqrt(mean((las.pred - y.val)^2))
+```
+
+Again, lasso did about the same as the best linear model.
+
+### Modeling: Forward Stepwise
+
+Let's try a forward stepwise approach (since there are too many variables for a best subset approach):
+
+```{r}
+library(leaps)
+fwd.fit <- regsubsets(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=tr, nvmax=36, method="forward")
+plot(fwd.fit, scale="adjr2")
+
+# loop through models of each size and compute test RMSE for each model (clever approach from ISLR page 248)
+fwd.errors <- rep(NA, 36)
+val.mat <- model.matrix(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=val)
+for(i in 1:36) {
+    # extract the coefficients from the best model of that size
+    coefi <- coef(fwd.fit, id=i)
+    # multiply them into the appropriate columns of the test model matrix to predict
+    pred <- val.mat[, names(coefi)] %*% coefi
+    # compute the test MSE
+    fwd.errors[i] <- sqrt(mean((y.val-pred)^2))
+}
+
+# find the best model
+fwd.errors
+min(fwd.errors)
+which.min(fwd.errors)
+```
+
+Again, forward stepwise did about the same as the best linear model, and chose the model with all 36 variables.
+
+Let's just go with the best linear model, and test it against the solution!
+
+### Test Model Against Solution
+
+First, we need to read in the solution set and redo our feature engineering:
+
+```{r}
+solution <- read.csv("solution.csv", as.is=TRUE)
+solution$ContractType <- as.factor(solution$ContractType)
+solution$ContractTime <- as.factor(solution$ContractTime)
+solution$Category <- as.factor(solution$Category)
+solution$SourceName <- as.factor(solution$SourceName)
+solution$Company <- as.factor(solution$Company)
+solution$LocationNormalized <- as.factor(solution$LocationNormalized)
+for(i in 1:nrow(solution)) {
+    loc <- solution$LocationNormalized[i]
+    line.id <- which(grepl(loc, tree))[1]
+    r <- regexpr("~.+?~", tree[line.id])
+    match <- regmatches(tree[line.id], r)
+    solution$Location[i] <- gsub("~", "", match)
+}
+solution$Location <- as.factor(solution$Location)
+solution$London <- as.factor(ifelse(solution$Location=="London", "Yes", "No"))
+solution$TitleSenior <- as.factor(ifelse(grepl("[Ss]enior", solution$Title), "Yes", "No"))
+solution$TitleManage <- as.factor(ifelse(grepl("[Mm]anage", solution$Title), "Yes", "No"))
+solution$DescripSenior <- as.factor(ifelse(grepl("[Ss]enior", solution$FullDescription), "Yes", "No"))
+solution$DescripManage <- as.factor(ifelse(grepl("[Mm]anage", solution$FullDescription), "Yes", "No"))
+```
+
+The solution set has an extra Category (not present in the training set), so I'll take the easiest approach and just convert it to a different Category:
+
+```{r}
+pt.index <- which(solution$Category=="Part time Jobs")
+solution$Category[pt.index] <- "Admin Jobs"
+solution$Category <- factor(solution$Category)
+```
+
+To get some context, let's check the RMSE for a model fit with just the intercept from the full training set:
+
+```{r}
+sqrt(mean((mean(train$SalaryNormalized) - solution$SalaryNormalized)^2))
+```
+
+Okay, let's train our linear model on the full training set, and predict on the solution set:
+
+```{r}
+lm.fit5 <- lm(SalaryNormalized ~ ContractType+ContractTime+Category+London+TitleSenior+TitleManage+DescripSenior+DescripManage, data=train)
+summary(lm.fit5)
+lm.pred5 <- predict(lm.fit5, newdata=solution)
+sqrt(mean((lm.pred5-solution$SalaryNormalized)^2))
+```
+
+The decrease in RMSE (over the intercept-only model) is similar to what we saw for the validation set approach, meaning that the validation set approach did a good job predicting how we would eventually do on the solution set.
+
+As for how to improve the model, I would bet that you could achieve significant reductions in RMSE by generating a ton of features from the Title and FullDescription. I was surprised by how much performance increased in lm.fit4 (over lm.fit3) just by adding four very simple text features.
