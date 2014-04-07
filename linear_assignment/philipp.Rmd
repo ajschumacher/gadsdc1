@@ -1,0 +1,109 @@
+# Linear Assignment (Adzuna project)
+
+Check out the pretty RPubs version [here](http://rpubs.com/pgrimm52/gadsdc_linear_assignment), friends!
+
+## Load base dataset
+```{r}
+setwd("/Users/philipp/Desktop/salary")
+base <- read.csv("train.csv")
+typeof(base)
+str(base)
+```
+
+## Split into training and test datasets (2:1 split)
+```{r}
+random <- sample(nrow(base), nrow(base)*2/3)
+base.train <- base[random,]
+base.test <- base[-random,]
+```
+
+## Pretty visualizations (for example, Salary by Category)
+```{r}
+library(ggplot2)
+ggplot(base, aes(Category, SalaryNormalized)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Create basic linear model (using the train/test sets created above)
+```{r}
+model.1 <- lm(SalaryNormalized ~ 1, data=base.train)
+pred.1 <- predict(model.1, base.test)
+
+model.2 <- lm(SalaryNormalized ~ Category, data=base.train)
+pred.2 <- predict(model.2, base.test)
+
+model.3 <- lm(SalaryNormalized ~ ContractType + ContractTime + Category, data=base.train)
+pred.3 <- predict(model.3, newdata=base.test)
+
+model.4 <- lm(SalaryNormalized ~ ContractType*ContractTime + Category, data=base.train)
+pred.4 <- predict(model.4, newdata=base.test)
+```
+
+## Create evaluation metric function (chosen metric: RSME) & calculate metric for above models
+```{r}
+rmse <- function(a,b){
+  sqrt(mean((a-b)^2))
+}
+
+rmse(pred.1, base.test[["SalaryNormalized"]])
+rmse(pred.2, base.test[["SalaryNormalized"]])
+rmse(pred.3, base.test[["SalaryNormalized"]])
+rmse(pred.4, base.test[["SalaryNormalized"]])
+```
+
+## Create cross-validation tool (could also have used cv.lm in DAAG package) for testing on entire dataset
+```{r}
+cross_val <- function(data, label_column, model_formula, folds_number){
+  fold <- sample(folds_number, nrow(data), replace=TRUE)
+  eval <- sapply(1:folds_number, function(i){
+    train <- data[fold != i, ]
+    test <- data[fold == i, ]
+    model <- lm(model_formula, data=train)
+    pred <- predict(model, test)
+    return( sqrt( 
+      mean( 
+        ( pred - test[, label_column] ) ^2 
+      )
+    ))
+  })
+  return(mean(eval))
+}
+
+my.formula <- SalaryNormalized ~ ContractType*ContractTime + Category
+cross_val(base, 11, my.formula, 10)
+```
+## Search job title for keyword like "Manager" (adding new features)
+```{r}
+manager_rows <- grep("Manager", base[,2])
+base$Manager <- 0
+base$Manager[manager_rows] <- 1
+
+my.formula <- SalaryNormalized ~ ContractType*ContractTime + Category + Manager
+cross_val(base, 11, my.formula, 10)  
+```
+
+## Now test against this model against the real test/solution data
+```{r}
+my.formula <- SalaryNormalized ~ ContractType*ContractTime + Category + Manager
+model.final <- lm(my.formula, data=base)
+
+real.test <- read.csv("test.csv")
+real.solution <- read.csv("solution.csv")
+
+manager_rows <- grep("Manager", real.test[,2])
+real.test$Manager <- 0
+real.test$Manager[manager_rows] <- 1
+
+problem_rows <- c(which(real.test$Category == "Part time Jobs"))
+real.test$Category[problem_rows] <- "Other/General Jobs"
+
+real.predictions <- predict(model.final, real.test)
+rmse(real.predictions, real.solution[["SalaryNormalized"]])
+```
+
+## What's left?
+
+A whole lot! I've only scratched the surface of what can be done as part of this project, and I intend to do much more:
+  * Exploit location_tree.txt to create new features (or refine existing ones)
+  * Use tm to experiment with the free-form text job description (potentially a gold mine)
+  * Play with regularized fits (once I understand them better)
+  * Vowpal wabbit? wtf?  
