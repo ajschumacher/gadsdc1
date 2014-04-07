@@ -1,0 +1,151 @@
+Linear Assignment
+========================================================
+
+From:
+https://github.com/ajschumacher/gadsdc/tree/master/linear_assignment
+It is also in Rpub:
+http://rpubs.com/liyifan5923013/15511
+
+First, read the data to R
+
+```{r}
+
+
+data.dir   <- 'D:/Users/yifan.li/Downloads/'
+train.file <- paste0(data.dir, 'train1.csv')
+test.file <-  paste0(data.dir, 'test1.csv')
+solution.file <- paste0(data.dir,'solution.csv')
+location_tree.file <- paste0(data.dir,'location_tree.csv')
+d.train <- read.csv(train.file, stringsAsFactors=F)
+d.test <- read.csv(test.file, stringsAsFactors=F)
+d.solution <- read.csv(solution.file,stringsAsFactors=F)
+d.location_tree <- read.csv(location_tree.file,stringsAsFactors=F)
+```
+Then, split the original training set to 70 percent training and 30 percent testing
+```{r}
+n <- 10
+chunks <- sample(n,nrow(d.train),replace=T)
+test <- d.train[,-c(3,10,11)][chunks <= 3,]
+test.labels <- d.train$SalaryNormalized[chunks <= 3]
+train.All <- d.train[,-c(3,10)][chunks > 3,]
+#train.labels <- d.train$SalaryNormalized[chunks > 3]
+```
+we can try some coveriation matrix to eliminate the least correlated
+coefficients:
+```{r}
+CorrelationMatrix <- (cor(model.matrix( ~ LocationNormalized + ContractTime + Category , data = train.All)))
+install.packages('reshape')
+library("reshape")
+aaa<-melt(CorrelationMatrix)
+#also, check if the categorical value are many or little
+colSums((cbind(1,as.numeric(train.All$ContractTime!=""))))
+#only 3311 out of 6957 has the ContractTime, too many missing values
+```
+
+
+We can also just try a few different formulars to come with a good R squared:
+After these tests:
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized + ContractTime + Category + Company, data=train.All)
+summary(linear.fit)$r.squared
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized + ContractTime + Category + Title, data=train.All)
+summary(linear.fit)$r.squared
+#Title is not good at all
+
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized + ContractTime * Category, data=train.All)
+summary(linear.fit)$r.squared
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized * ContractTime + Category, data=train.All)
+summary(linear.fit)$r.squared
+
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized + ContractTime + Category, data=train.All)
+summary(linear.fit)$r.squared
+
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized  + Category, data=train.All)
+summary(linear.fit)$r.squared
+
+linear.fit <- lm(SalaryNormalized ~  ContractTime + Category, data=train.All)
+summary(linear.fit)$r.squared
+
+
+I found:
+```{r}
+linear.fit <- lm(SalaryNormalized ~   Category, data=train.All)
+summary(linear.fit)$r.squared
+#[1] 0.1554836#Best so far
+```
+So, we concluded that Category alone is probabaly a good predictor.
+Then, we compare the prediction to the test(which is divided from original training)
+```{r}
+predictions <- predict(linear.fit, test)
+str(data.frame(predictions))
+str(data.frame(test.labels))
+is.vector((predictions))
+#some code that check how good is the prediction
+install.packages("hydroGOF")
+library("hydroGOF")
+mse(data.frame(test.labels),data.frame(predictions))
+```
+The result of the mse is 2.24e+08, which is not good to me.
+Also, use the entire train dataset and then check if the test is good.
+```{r}
+#The test has no Category "Part time Jobs", so I made up one
+newTrain <- rbind(newTrain,data.frame(Category="Part time Jobs",SalaryNormalized=11000L))
+linear.fit <- lm(SalaryNormalized ~ Category, data=newTrain)
+newTrain=(data.frame(Category=d.train$Category,SalaryNormalized=d.train$SalaryNormalized,stringsAsFactors=FALSE))
+
+summary(linear.fit)$r.squared
+predictions1 <- predict(linear.fit, d.test)
+mse(data.frame(d.solution$SalaryNormalized),data.frame(predictions1))
+```
+The result is not that promissing also, 301640399...
+We can also do cross validation with cv.lm in DAAG library.
+```{r}
+install.packages('DAAG')
+library('DAAG')
+cv.lm(d.train,SalaryNormalized ~ factor(Category))
+```
+
+Lator we want to play with the glmnet
+```{r}
+install.packages('glmnet')
+library(glmnet)
+X = model.matrix( ~  Category , data = data.frame(Category=train.All$Category))
+Y = train.All$SalaryNormalized
+m <- glmnet(X, Y, alpha=0)#ridge penalty
+plot(m, xvar='lambda',label=T)
+```
+And also for the real test and solution dataset:
+```{r}
+X = model.matrix( ~  Category , data = newTrain)
+Y = newTrain$SalaryNormalized
+m <- glmnet(X, Y, alpha=0)#ridge penalty
+plot(m, xvar='lambda',label=T)
+```
+you can even use the cross-validation that comes with glmnet to
+get a better regularization residure lambda
+```{r}
+mn <- cv.glmnet(X, Y, alpha=0, nfolds=4)
+plot(mn)
+coef(mn)
+CategoryX <- model.matrix(~ Category,data=data.frame(Category=test$Category))
+predictions2 <- predict(m, CategoryX, s=mn[['lambda.1se']])
+mse(data.frame(test.labels),data.frame(predictions2))
+
+```
+The result is 2.3e+08, which is worse then the lm, which makes sense since it eliminates some sort of overfitting by regularization
+And also for the real test and solution dataset:
+```{r}
+mn <- cv.glmnet(X, Y, alpha=0, nfolds=4)
+plot(mn)
+CategoryX <- model.matrix(~ Category,data=d.test)
+predictions2 <- predict(m, CategoryX, s=mn[['lambda.1se']])
+mse(data.frame(d.solution$SalaryNormalized),data.frame(predictions2))
+```
+The same thing, worse then OLs(lm).
+
+
+The rest of this little R-markdown write-up is about the tm, grep to get useful information from Title, JobDescription etc, to create new features.

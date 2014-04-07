@@ -1,0 +1,45 @@
+Linear Regression to find Salaries based on Job Titles
+========================================================
+
+```{r}
+library(DAAG)
+library(RWeka)
+# > R CMD INSTALL 
+library(tm)
+train.df <- read.csv('R/train.csv')
+```
+
+This is a very basic model that uses the ContractType and the Job Category. The first time around I removed all blank ContractTypes. Then I tried again assuming that the blanks were really full_time. I had a lower Multiple R-Squared when I converted them to full_time, so scratch that, dropping the blanks.
+
+```{r}
+train.df <- subset(train.df, ContractType !='')
+#train.df$ContractType[train.df$ContractType=='' ]<- 'full_time'
+fit <- lm(SalaryNormalized ~ ContractType + Category,data=train.df)
+summary(fit)
+```
+
+I then added in the Normalized Location, to see if that improved the model as measured by the R-Squared.  Big impact.  Multiple R-Squared jumped to .35 from .19. 
+
+```{r}
+fit <- lm(SalaryNormalized ~ ContractType + Category + LocationNormalized,data=train.df)
+summary(fit)
+```
+
+Now that we're on the first, little roll of our data science career, let's see if cross validation has an impact.  I may have made a mistake, but as far as R-squared goes, it did exactly diddly squat.  But I did sort of expect it.  We haven't changed the underlying model, simply doing more breaking up of the data.
+
+```{r}
+fit <- CVlm(df=train.df,form.lm=formula(SalaryNormalized ~ ContractType + Category + LocationNormalized),plotit="Residual") # worked once, not working now
+#fit <- cv.lm(train.df,SalaryNormalized ~ ContractType + Category + LocationNormalized,m=5) # couldn't get this to work.  Error generated was "factor LocationNormalized has new levels ..."
+
+
+```
+
+Now I'm going to try for the major leagues.  I'm going to try to break out the words/phrases from the title and see if that improves the model.
+
+It as at this point that the programming process sort of broke down due to sysadmin problems.  I tried to install the RWeka package, but after some work, learned you have to install java first.  I believe I got java installed, with some sort of iced_tea thing, but RWeka still doesn't know its there.  And then I ran out of time...
+
+
+
+
+
+

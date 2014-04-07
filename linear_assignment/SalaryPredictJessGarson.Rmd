@@ -1,0 +1,52 @@
+Salary Predictions
+========================================================
+
+First I need to load the dataframes 
+```{r}
+test <- read.csv("~/learning-python/gadsdata/salary/test.csv")
+View(test)
+train <- read.csv("~/learning-python/gadsdata/salary/train.csv")
+View(train)
+location_tree <- read.csv("~/learning-python/gadsdata/salary/location_tree.csv")
+View(location_tree)
+```
+
+After I like to get a summary of the training and testing data 
+```{r}
+summary(test)
+summary (train)
+```
+
+Plot the Data
+```{r}
+library(ggplot2)
+ggplot(train, aes(SalaryNormalized)) + geom_bar() + facet_grid(ContractType ~ .)
+```
+
+Lets take a look at the linear fit. 
+```{r}
+linear.fit <- lm(SalaryNormalized ~  LocationNormalized + ContractTime + Category + Company, data=train)
+summary(linear.fit)$r.squared
+```
+
+I liked when plotted it and drew a line in class so I'm going to do that here
+```{r}
+plot(SalaryNormalized ~ ContractType, data=train)
+abline(linear.fit, col="green")
+```
+
+Another Plot
+```{r}
+plot(SalaryNormalized ~ ContractType, data=train)
+abline(linear.fit, col="green")
+```
+
+Attempting to predict
+```{r}
+predictions <- predict(linear.fit, test)
+str(data.frame(predictions))
+is.vector((predictions))
+```
+
+I think this is a good start but more work is needed here before I can fully predict. 
+
