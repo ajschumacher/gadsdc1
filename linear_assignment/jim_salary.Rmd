@@ -1,0 +1,54 @@
+#get the data
+train <- read.csv("C:\\Users\\JIM~1.ANC\\AppData\\Local\\Temp\\Rtmp8Ca3cw\\data2decd3c7169")
+test <- read.csv("C:\\Users\\JIM~1.ANC\\AppData\\Local\\Temp\\Rtmp8Ca3cw\\data2dec49043501")
+location_tree <- read.table("C:\\Users\\JIM~1.ANC\\AppData\\Local\\Temp\\Rtmp8Ca3cw\\data2dec502e64d9", quote="\"")
+
+#let's try that DAAG library package for their cv.lm function
+
+#install.packages("DAAG")
+require(DAAG)
+
+#first lets take a look at the scattermatrix to see what we have
+
+plot(train)
+
+#that seems useless. lets try a few exploratory scatter plots.
+
+plot(x=train$SalaryNormalized) 
+#looks ok to keep untransformed. but there are a few high values up there.
+
+#lets look by category
+bp<-boxplot(train$SalaryNormalized~train$Category)
+
+cvm1<-cv.lm(df = train, form.lm=formula(SalaryNormalized~Category), m=3)
+#the rmse for this is like 2 million. that seems wrong.
+
+#lets add some more details to the model by using grepl for some potential key words
+train$has.technology<-grepl('technology', train$FullDescription)
+train$has.financial<-grepl('financial', train$FullDescription)
+train$has.senior<-grepl('senior', train$FullDescription)
+train$has.manage<-grepl('manage',train$FullDescription)
+
+cvm2<-cv.lm(df=train, form.lm=formula(SalaryNormalized~has.technology + has.financial + has.senior + has.manage + Category + ContractType + ContractTime))
+
+#this still looks weird. lets just forget it and use GLMNET!
+
+require(glmnet)
+
+
+x<-model.matrix(~has.technology + has.financial + has.senior + has.manage + Category + ContractType + ContractTime, data = train)
+
+y<-train$SalaryNormalized
+
+m<-cv.glmnet(x, y)
+plot(m)
+m$lambda.min
+#looks like glmnet likes lambda at 11.3 
+#lets see what our cross validation error is there.
+m<-glmnet(x,y,lambda=11.3)
+summary(m)
+predictions<-predict(m, s="lambda.min", newx=x)
+train$pred<-predictions
+train$resid<-train$SalaryNormalized-train$pred
+train$sq.resid<-train$resid**2
+mean
