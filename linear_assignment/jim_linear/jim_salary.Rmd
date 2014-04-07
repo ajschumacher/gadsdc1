@@ -1,0 +1,137 @@
+Predicting Salary Based on Job Description
+==========================================
+
+First, let's get the data
+```{R}
+train <- read.csv("<- read.table("https://raw.githubusercontent.com/ajschumacher/gadsdata/master/salary/train.csv")
+test <- read.csv("https://raw.githubusercontent.com/ajschumacher/gadsdata/master/salary/test.csv")
+location_tree <- read.table("https://raw.githubusercontent.com/ajschumacher/gadsdata/master/salary/location_tree.txt", quote="\"")
+```
+
+Let's try that DAAG library package for their cv.lm function
+```{R}
+install.packages("DAAG")
+require(DAAG)
+```
+First lets take a look at the scattermatrix to see what we have
+```{R}
+plot(train)
+```
+That seems useless. lets try a few exploratory scatter plots.
+```{R}
+plot(x=train$SalaryNormalized) 
+```
+Looks ok to keep untransformed. but there are a few high values up there. That
+should be something to keep an eye on in case they have too much leverage.
+
+I love boxplots, so lets look by category
+```{R}
+bp<-boxplot(train$SalaryNormalized~train$Category, colour=train$Category)
+```
+
+We can now try to run the model just using the Category as the feature set.
+```{R}
+cvm1<-cv.lm(df = train, form.lm=formula(SalaryNormalized~Category), m=3)
+```
+The mse for this is approximately 2 million. that seems high.
+
+lets add some more details to the model by using grepl for some potential key words and then check it out.
+```{R}
+train$has.technology<-grepl('technology', train$FullDescription)
+train$has.financial<-grepl('financial', train$FullDescription)
+train$has.senior<-grepl('senior', train$FullDescription)
+train$has.manage<-grepl('manage',train$FullDescription)
+
+cvm2<-cv.lm(df=train, form.lm=formula(SalaryNormalized~has.technology + has.financial + has.senior + has.manage + Category + ContractType + ContractTime))
+```
+
+#this still looks weird. lets just forget it and use GLMNET!
+
+```{R}
+require(glmnet)
+
+
+x<-model.matrix(~has.technology + has.financial + has.senior + has.manage + Category + ContractType + ContractTime, data = train)
+
+y<-train$SalaryNormalized
+
+m<-glmnet(x, y)
+plot(m, label=TRUE)
+```
+
+```{R}
+
+cvm1<-cv.glmnet(x, y) #default to lasso is fine.
+plot(cvm1)
+cvm1$lambda.min
+```
+
+Looks like glmnet likes lambda at 6.47
+Let's see what coefficients it liked:
+
+```{R}
+cvm1$lambda.min
+coef(cvm1, s="lambda.min")
+```
+
+Well, it kept them all. i don't really like that. I'd prefer a 
+simpler model, so I'm going to use the 1se lambda.
+```{R}
+cvm1$lambda.1se
+coef(cvm1, s='lambda.1se')
+```
+
+That looks a little better, so I think we can try this against the test data.
+
+```{R}
+
+test$has.technology<-grepl('technology', test$FullDescription)
+test$has.financial<-grepl('financial', test$FullDescription)
+test$has.senior<-grepl('senior', test$FullDescription)
+test$has.manage<-grepl('manage',test$FullDescription)
+test2<-test[test$Category!='Part time Jobs',]
+test2$Category<-factor(test2$Category)
+
+new.x<-model.matrix(~x, data = test2)
+
+
+new.x<-model.matrix(~has.technology + has.financial + has.senior + has.manage + Category + ContractType + ContractTime, data = test2)
+
+test2$predictions<-predict(cvm1,newx=new.x, s=426)
+```
+
+So now we have predictins. It's time to see how they do
+against the solutions
+
+```{R}
+solution$predictions<-predict(cvm1, newx=new.x, s=426)
+
+>Error in `$<-.data.frame`(`*tmp*`, "predictions", value = c(30523.3755576254,  : 
+  replacement has 4990 rows, data has 5000
+  
+```
+That's annoying. The predictions are reduced because I subtracted
+out the part time jobs category. Just for now, I'll substract it
+out on the solutions and see how it works.
+
+```{R}
+solution<-solution[solution$Category!='Part time Jobs',]
+solution$predictions<-predict(cvm1, newx=new.x, s=426)
+```
+
+I'm going to do this by hand because sometimes I forget how the models do it
+
+```{R}
+solution$resid<-solution$SalaryNormalized-solution$predictions
+solution$sq.resid<-solution$resid**2
+mean(solution$sq.resid) #2.86e+08
+sqrt(mean(solution$sq.resid)) #16917
+```
+
+This feels like a pretty big gap. Not especially satisfied!
+
+```{R}
+plot(solution$resid)
+```
+
+There's something interesting going on there that it captures very well for a particular class of job. But the earlier ones in the index don't seem to do as well.
