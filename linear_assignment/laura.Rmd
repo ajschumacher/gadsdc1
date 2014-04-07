@@ -1,0 +1,156 @@
+Linear Regression Assignment
+========================================================
+First I set everything up.
+```{r}
+setwd("/Users/dmig/Repos/git/gadsdata/salary/")
+library(DAAG) #for cross validation
+library(reshape) #for melt
+library(glmnet) #for dimensional reduction
+
+
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+sampletrain <- train[sample(1:nrow(train), 1000),]
+
+attach(train)
+```
+
+Now I want to look at my data to see what I have and what I can use to regress on.
+```{r eval=FALSE}
+plot(sampletrain)
+str(sampletrain)
+```
+
+So we have:
+- **ID** an int that is a unique ID; not useful
+- **Title** coming in as a factor, non standardized title name. Not going to use this either unless I can standardize it.
+- **FullDescription** Entire job description, coming in as a factor. Also not going to use as it is not standardized.
+- **LocationRaw** Entire location coming in as a factor; could be misspelled, or have extra information. Not useful.
+- **LocationNormalized** Normalized location coming in as a factor; 2399 raws was reduced to 899 standardized levels. Going to use this.
+- **Contract Type** Normalized type of contract full time, part time, or blank, coming in as factor. Going to use this.
+- **ContractTime** Normalized type of contract, whether permanent or contract or blank, coming in as a factor. Going to use this.
+- **Company** What company is making the job request, coming in as a factor with 1198 levels. Could be useful, but will be computationally heavy.
+- **Category** What category the job description is for, coming in as a factor of 28 levels. Going to use this.
+- **Salary Raw** Salary offering that can be a range or include what other benefits are included with the compensation package, nor normalized. Not using.
+- **SalaryNormalized** Noramlized version of the salary offering coming in as an int. Will use.
+- **SourceName** One of 74 different sources the job offer was posted at; may be useful but will increase computation. Not going to use at first.
+
+
+
+
+
+Time to make and look at the model!
+```{r eval=FALSE}
+#fit a linear model using Category as a predictor for SalaryNormalized
+simple.linear.fit<- lm(SalaryNormalized ~ Category)
+#save the formula object for use later by model.matrix
+simplek <- SalaryNormalized ~ Category
+#create the model matrix for the simple model
+simplemodel <- model.matrix(simplek,data=sampletrain)
+#get the correlations between the simple model predictors
+cor.simplemodel <- cor(simplemodel)
+#get how many correlations are equal to 1
+str(Category) #find how many levels there are to factors. would expect their correlations to = 1
+df <- melt(cor.simplemodel)
+ones <- as.integer(df[,3]==1)
+ones <- na.omit(ones)
+sum(ones)
+#get how many correlations are greater than 0.8
+eights <- as.integer(df[,3]>0.8)
+eights <- na.omit(eights)
+sum(eights)
+```
+
+Looks like none of my features appear to predict each other. Lets move forward with making some predictions via cross-validation on the training set. Let's start with a baby regression using just the Category feature and try cross validating it.
+
+```{r eval=FALSE}
+detach(sampletrain)
+attach(train)
+
+simple.linear.fit<- lm(SalaryNormalized ~ Category)
+crossvalidationA <- (cv.lm(df=train, simple.linear.fit, m=3))
+msA <- attr(crossvalidationA, "ms")
+
+```
+
+Ok, so I can predict to some internally valid accuracy using just Category. I want to figure out what features I really should include from the ones that I have identified may be useful. I will use `glmnet` to do dimensional reduction on my identified features:
+
+SalaryNormalized ~  Category + Company + ContractType + ContractTime + LocationNormalized
+
+```{r}
+
+MM <- model.matrix(formula(SalaryNormalized ~ Category + ContractType + ContractTime + Company + LocationNormalized), data=train)
+```
+```{r eval=FALSE}
+#Ridge
+m <- glmnet(MM, SalaryNormalized, alpha=0)
+plot(m, xvar='lambda')
+#Lasso
+m <- glmnet(MM, SalaryNormalized, alpha=1)
+plot(m, xvar='lambda')
+#Lasso with cross validation
+m <- cv.glmnet(MM, SalaryNormalized, alpha=1, nfolds=4)
+plot(m)
+```
+
+So now I can use the `lambda.min` from the cross validated glmnet to reduce my dimensions to their optimal prediction ability, and make predictions using that generalized linear model.
+
+```{r eval=FALSE}
+predictions <- predict(m, MM, s='lambda.min')
+#plot all the Salary Normalized I have in train
+plot(SalaryNormalized)
+#plot on that all the points of my predictions
+points(predictions, type='l', col='blue')
+```
+
+Now I will use that GLM on my test data to get predictions for test.
+HELP ME
+===
+
+```{r}
+detach(train)
+attach(test)
+MMtest <- model.matrix(~ Category + ContractType + ContractTime + Company + LocationNormalized, data=test)
+#Test and train model matricies must have the same dimnames. Test for differences:
+MMtest.dimnames<-(attr(MMtest, "dimnames"))[[2]]
+MMtrain.dimnames<-(attr(MM, "dimnames"))[[2]]
+str(MMtrain.dimnames)
+#try to get the intersection
+i <- intersect(MMtest.dimnames, MMtrain.dimnames)
+#get what needs to be dummied in test
+difftrain <- setdiff(MMtrain.dimnames, MMtest.dimnames)
+difftrainsmall <- difftrain[1:20]
+n <- nrow(MMtest)
+
+for(item in difftrain){
+  MMtest[item] <- cbind(rep(0,n))
+}
+
+str(i)
+str(difftrain)
+str(difftest)
+
+
+predictions <- predict(m, MMtest, s='lambda.min')
+#points(predictions, type='l', col='red')
+```
+
+Now I will check if it worked on the test using solutions.
+```{r}
+
+```
+
+
+
+Odds and Ends
+===
+```{r eval=FALSE}
+#get all the names of the correlations as a vector
+modelnames <- lapply(attr(cor.modela, "dimnames")[[1]], function(x, y){
+   sapply(y, function(y) paste(x, y, sep=" "))
+}, attr(cor.modela, "dimnames"[[1]]))
+
+#get all the values of the correlations as a vector
+c<-c(modela)
+
+```
