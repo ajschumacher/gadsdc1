@@ -152,4 +152,10 @@ rmse.5
 
 #This is the best fit with basic lm.  
 
+library(glmnet)
+sal_set <- model.matrix(SalaryNormalized ~ Technical + Category + Leadership + DegreeRequired 
+                        , data=sal_loc)
+sal <- sal_loc$SalaryNormalized
+regularized.fit <- glmnet(sal_set, sal)
+str(regularized.fit)
 #Bad weekend, ran out of time, need to work on glm approaches later.  
