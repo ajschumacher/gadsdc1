@@ -1,0 +1,53 @@
+Data Visualizations
+===
+```{r}
+library(ggplot2)
+setwd("/Users/dmig/Dropbox/Pricespotting/Price Variance/")
+data2 <- read.csv("BeveragesData.csv", na.strings=(c("NULL")))
+data2<- data2[,names(data2)!='region_id']
+datadrop = na.omit(data2)
+
+dataconv<-datadrop
+dataconv <- dataconv[dataconv$unit_count!=0,]
+dataconv <- dataconv[dataconv$chain_desc!='NA',]
+dataconv <- dataconv[,1:17]
+conversion <- c('Liter'=33.844, 'Pint'=16.0, 'Quart'=32.0, 'Gallon'=128.0, 'Milliliter'=0.033814, 'Ounce'=1, 'Fluid Ounce'=1)
+
+dataconv$size <- dataconv$size * conversion[dataconv$unit_desc]
+dataconvdrop <- na.omit(dataconv)
+
+```
+Plots
+===
+
+Data loss at each cleanup step
+---
+
+```{r}
+lengths <- c(nrow(data2), nrow(datadrop), nrow(dataconv), nrow(dataconvdrop))
+names <- c('data', 'datadrop', 'dataconv', 'dataconvdrop')
+names<- factor(names, levels=c('data', 'datadrop', 'dataconv', 'dataconvdrop'), ordered=TRUE)
+lengthdf <- data.frame(lengths, names)
+colnames(lengthdf) <- c('lengths', 'names')
+ggplot(data=lengthdf) + aes(y=lengthdf$lengths, x=lengthdf$names) + geom_bar(aes(fill=lengthdf$names)) + xlab("Dataframe") + ylab("Number of rows") + ggtitle("Loss of data at each cleanup step") + theme(legend.position="none")
+
+```
+
+Density on whole set
+----
+Do not see anything because of extreme outliers
+
+```{r}
+
+d <- density(dataconvdrop$price)
+plot(d, main="Distribution of price variable", sub="Beverage products")
+```
+
+Density under third quartile
+---
+```{r}
+summary(dataconvdrop$price)
+d5 <- density(dataconvdrop$price[dataconvdrop$price<5.00])
+plot(d5, main="Distribution of price variable for values under 3rd quartile (4.99)", sub="Beverage products")
+```
+
