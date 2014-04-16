@@ -1,0 +1,31 @@
+Project Viz
+========================================================
+First I need to load the data
+```{r}
+library(ggplot2)
+PositionData <- read.csv("/Applications/R/PositionData.csv")
+skill <- read.csv("/Applications/R/skill.csv")
+orgtype <- read.csv("/Applications/R/orgtype.csv")
+```
+
+Here are three project vizualizations:
+
+This data, comes from the toplines of a political data survey that went around on some internal list-serves.
+
+1. Type of Position by Average Salary
+
+```{r fig.width=7, fig.height=6}
+ggplot(data = PositionData) + aes(x = Position, y = Average) + geom_histogram()
+```
+
+2. Skill by Average Salary 
+
+```{r fig.width=7, fig.height=6}
+ggplot(data = skill) + aes(x = Skill, y = Average) + geom_boxplot()
+```
+
+3. Org Type by Average Salary
+
+```{r fig.width=7, fig.height=6}
+ggplot(data = orgtype) + aes(x = Type, y = Average) + geom_point()
+```
