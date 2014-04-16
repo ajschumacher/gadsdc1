@@ -1,5 +1,6 @@
 /data
 /images
+/.ipynb_checkpoints
 *.DS_Store
 notes*
 email_classify.R
