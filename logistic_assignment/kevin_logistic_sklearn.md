@@ -1,0 +1,1 @@
+My logistic regression assignment can be viewed using the [IPython Notebook Viewer](http://nbviewer.ipython.org/github/justmarkham/gadsdc1/blob/master/logistic_assignment/kevin_logistic_sklearn.ipynb).
