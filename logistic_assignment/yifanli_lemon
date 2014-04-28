@@ -1,0 +1,156 @@
+#Get the csv files from the Source, where you download the file to
+#You can download the files from:
+#  https://github.com/ajschumacher/gadsdata/tree/master/lemons
+Source <- "/Users/yifanli/Documents/Logistic-Regression-Lemon/"
+clean <- paste0(Source, 'train.csv')
+solution <- paste0(Source, 'solution.csv')
+test1 <- paste0(Source, 'test.csv')
+train <- read.csv(clean)
+solu <- read.csv(solution)
+test <- read.csv(test1)
+#Make the Manual and MANUAL in Transmission the same factor
+train$Transmission[train$Transmission=="Manual"]<-"MANUAL"
+train$Transmission <- factor(train$Transmission)
+#Check to see how many false in the training set
+table(train$IsBadBuy)
+sum(train$IsBadBuy)/nrow(train)
+train$MMRCurrentAuctionCleanPrice
+head(is.na(train$MMRCurrentAuctionCleanPrice))
+sum(ave(train$MMRCurrentAuctionCleanPrice))
+
+#Get what cols have missing values
+misscol <- numeric()
+misscolf <- function(df){
+  for(x in 1:ncol(df)) {
+    if(sum(is.na(df[,x])) != 0) {
+      misscol <- c(misscol,x)
+    }}
+  return (misscol)
+}
+
+#Get the average from the nonNAs
+fillWithAve <- function(df,features) { 
+ df1<- sapply(features,function(feat){
+   meanFeat <-mean(df[,feat][!is.na(df[,feat])]) 
+  })
+}
+#Fill the dataset with the average
+fillT <- function(missT,aveFill,Dataset){
+  i = 1
+  for(x in missT) {
+    Dataset[,x][is.na(Dataset[,x])] <- aveFill[i]
+    i <- i+1
+  }
+  return (Dataset)
+}
+missTrain<-misscolf(train)
+missTest <- misscolf(test)
+
+aveFillTrain <- fillWithAve(train,missTrain)
+aveFillTest <- fillWithAve(test,missTest)
+train11 <- fillT(missTrain,aveFillTrain,train)
+test11 <- fillT(missTest,aveFillTest,test)
+train <-train11
+test <- test11
+
+#A bunch of plots, get a feel of the data
+boxplot(MMRAcquisitionAuctionAveragePrice ~ IsBadBuy, data=train, xlab="AAAP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRAcquisitionAuctionCleanPrice ~ IsBadBuy, data=train, xlab="AACP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRAcquisitionRetailAveragePrice ~ IsBadBuy, data=train, xlab="ARAP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRAcquisitonRetailCleanPrice ~ IsBadBuy, data=train, xlab="ARCP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRCurrentAuctionAveragePrice ~ IsBadBuy, data=train, xlab="CAAP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRCurrentAuctionCleanPrice ~ IsBadBuy, data=train, xlab="CACP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRCurrentRetailAveragePrice ~ IsBadBuy, data=train, xlab="CRAP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(MMRCurrentRetailCleanPrice ~ IsBadBuy, data=train, xlab="CRCP", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(BYRNO ~ IsBadBuy, data=train, xlab="BYRNO", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(VNZIP1 ~ IsBadBuy, data=train, xlab="VNZIP1", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(VehBCost ~ IsBadBuy, data=train, xlab="VehBCost", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(WarrantyCost ~ IsBadBuy, data=train, xlab="IsOnlineSale", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(VehOdo ~ IsBadBuy, data=train, xlab="VehOdo", ylab="not/BadBuy", horizontal=TRUE)
+boxplot(VehYear ~ IsBadBuy, data=train, xlab="VehYear", ylab="not/BadBuy", horizontal=TRUE)
+
+barplot(prop.table(table(train$IsBadBuy, train$Trim), 2), xlab="Trim", ylab="not/isBadBuy")
+barplot(prop.table(table(train$IsBadBuy, train$IsOnlineSale), 2), xlab="IsOnlineSale", ylab="not/isBadBuy")
+barplot(prop.table(table(train$IsBadBuy, train$Size), 2), xlab="Size", ylab="not/isBadBuy")
+barplot(prop.table(table(train$IsBadBuy, train$AUCGUART), 2), xlab="AUCGUART", ylab="not/isBadBuy")
+barplot(prop.table(table(train$IsBadBuy, train$PRIMEUNIT), 2), xlab="PRIMEUNIT", ylab="not/isBadBuy")
+
+
+head(train$Model)
+str(train)
+#Choose the plots with several factors that have significant influences
+#leave Trim alone for a while
+#leave Nationality alone for a while and Size
+
+model <- glm(IsBadBuy ~VehYear+poly(VehOdo,2)+AUCGUART+Nationality:BYRNO:Auction:VNZIP1:(
+  MMRAcquisitionAuctionAveragePrice+MMRAcquisitionAuctionCleanPrice+MMRAcquisitionRetailAveragePrice+
+    MMRAcquisitonRetailCleanPrice+MMRCurrentAuctionAveragePrice+MMRCurrentAuctionCleanPrice+
+    MMRCurrentRetailAveragePrice+MMRCurrentRetailCleanPrice)
+  #+IsOnlineSale:Auction
+# + Nationality:Model
+  +VehYear:VehicleAge+IsOnlineSale+Make
+  + VehBCost:Size:WarrantyCost
++WheelType+TopThreeAmericanName
+# +WheelTypeID:Model
+  #  +VehicleAge:Transmission:VNZIP1
+ # + VehBCost:Size:Make:Model:Auction:VNZIP1
+  ,data=train,family ="binomial")
+summary(model)
+#Cross-Validate the model with 10 folds to get the precision of model
+library(boot)
+set.seed(1)
+?cv.glm
+head(glm_modelmatrix)
+nrow(train)
+library(boot)
+cv.err<-cv.glm(train,model,K=10)
+cv.err$delta
+
+summary(cv.err)
+
+
+#The following procedures is to check how good/bad the model is
+
+#The probability of the IsBadBuy happens
+probs <- predict(model,train,type="response")
+suppressPackageStartupMessages(library('ROCR'))
+#prediction based on probability, in ROCR package
+pred <- prediction(predictions=probs,labels=train$IsBadBuy)
+#Accuracy: what percentage are correctly classified?
+acc <- performance(pred,measure="acc")
+plot(acc)
+#Precision: What percentage of positive predictions are correct?
+prec <- performance(pred,measure="prec")
+plot(prec)
+# Recall: what percentage of all positives were identified?
+rec <- performance(pred,measure="rec")
+plot(rec)
+# Receiver Operator Curve (ROC)
+roc <- performance(pred,'tpr','fpr')
+plot(roc)
+# Get the AUC (Area Under the roC) itself
+auc <- performance(pred,measure="auc")
+auc@y.values[[1]]
+
+#Then we proceed with testset, using the same glm model.
+
+#Using same model, calculate probability
+probs <- predict(model,test,type="response")
+head(probs)
+summary(probs)
+plot(density(probs))
+#And create a prediction object with predictions and true labels
+pred <- prediction(predictions=probs,labels=solu$IsBadBuy)
+?prediction
+acc <- performance(pred,measure="acc")
+plot(acc)
+prec <- performance(pred,measure="prec")
+plot(prec)
+rec <- performance(pred,measure="rec")
+plot(rec)
+roc <- performance(pred,'tpr','fpr')
+plot(roc)
+auc <- performance(pred,measure="auc")
+auc@y.values[[1]]
+
+
