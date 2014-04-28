@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
+
+<title>Excuses, excuses</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: rgb(88, 72, 246)
+   }
+
+   pre .number {
+     color: rgb(0, 0, 205);
+   }
+
+   pre .comment {
+     color: rgb(76, 136, 107);
+   }
+
+   pre .keyword {
+     color: rgb(0, 0, 255);
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: rgb(3, 106, 7);
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+</head>
+
+<body>
+<h1>Excuses, excuses</h1>
+
+<p>First of all, yes, my excuse is in R, so I&#39;ve already failed the logistic regression assignment.  But hear me out.  </p>
+
+<p>I have stubbornly decided that I will not spend my limited time on toy problems and turned to Kaggle for a dataset in the, you guessed it, hotel industry.  I&#39;m looking at the Expedia Kaggle competition where competitors must predict the optimal sort order of hotels on the Expedia search page to maximize booked revenue.  I&#39;m looking to classify a simpler problem - what is the likelihood of a single &ldquo;search&rdquo; resulting in a booking? </p>
+
+<p>The TL;DR version of my excuse is that I&#39;ve spent 10+ hours trying to massage some extract of this 2.4B dataset into the training set with the variables I want to use.  I have gotten a dataframe I like - hooray! But running glm on this modest 1400 observations of 10 variables seems to be crashing my system - boo.  So I will spending the time you all are learning about deep learning on Monday to put my kids to bed then get back to work on this assignment.</p>
+
+<p>And now for some code.</p>
+
+<h1>Stage 1 - Getting the raw data</h1>
+
+<p>The full 2.4GB training set and variable documentation may be found here: <a href="http://www.kaggle.com/c/expedia-personalized-sort/data">http://www.kaggle.com/c/expedia-personalized-sort/data</a>.  To make the dataset manageable, I sliced out the first 100K of 9.9M rows in the shell.</p>
+
+<pre><code>$ wc train.csv  
+$ touch train100K.csv
+$ head -100000 train.csv &gt; train100K.csv
+</code></pre>
+
+<p>There was no happiness when I tried to read into Python - around line 38000 there start to be some entries with commas instead of periods within some of the decimal values - hence csv readers are unhappy.  I really don&#39;t know how to solve this.  </p>
+
+<h3>Q1: How could I use pd.read_csv to read in a few extra columns to catch the overflow variables in the buggy lines with extra commas?  Another path - how do you specify datatypes to expect in each column?</h3>
+
+<p>If I had that, I&#39;d then delete out all lines that included those extra columns (after testing for more systematic issues).  For now, let&#39;s just read in 35K lines.</p>
+
+<pre><code>$ touch train35K.csv
+$ head -35000 train.csv &gt; train35K.csv
+</code></pre>
+
+<h1>Stage 2 - Python</h1>
+
+<pre><code>&gt;&gt;&gt; import pandas as pd
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; train = pd.read_csv(&quot;train35K.csv&quot;)   # throws a specify dtype warning 
+&gt;&gt;&gt; len(train[&#39;srch_id&#39;].value_counts())   
+</code></pre>
+
+<p>There are 1419 unique search ids in this data set.  Each has a few defining characteristics - search id, date/time, visitor location, search destination, etc&hellip;, These characteristics are copied down the several rows in the data set corresponding to each search which then also list out the characteristics of each hotel listed on the search page, including property location and ratings, and actual click or booking flag.  The proposal is to use logistic regression to determine the likelihood of a booking given the customer origin, destination market, average rating of hotels shows, number of hotels shown in a search, and other search-level variables.  To accomplish this, we need to roll up the 35K rows into 1419 searches with the hotel-level variables aggregated.</p>
+
+<h3>Q2: How can I get a nice data frame (or array) that includes the search level variables (duplicated across relevant rows) and the aggregated variables including a count, sums (of click/book booleans), and means (property ratings)?   Three unsatisfying methods proposed below.</h3>
+
+<h2>Method 1: create a search level data set using groupby and aggregate</h2>
+
+<pre><code>&gt;&gt;&gt; search_table = train.groupby([&#39;srch_id&#39;,&#39;date_time&#39;,&#39;site_id&#39;,&#39;visitor_location_country_id&#39;,&#39;srch_destination_id&#39;,&#39;random_bool&#39;]).aggregate({&#39;prop_id&#39;:&#39;count&#39;,&#39;prop_starrating&#39;:&#39;mean&#39;,&#39;prop_review_score&#39;:&#39;mean&#39;,&#39;click_bool&#39;:&#39;sum&#39;, &#39;booking_bool&#39;:&#39;sum&#39;})
+</code></pre>
+
+<p>This looks perfect on screen, but returns as a dataframe with just the five aggregated variables as columns.  The other 6 columns are grouped as some kind of index and would not be accessible to use as model features.</p>
+
+<h2>Method 2: create a search level data set using pd.pivot_table</h2>
+
+<pre><code>&gt;&gt;&gt; working_table = train.pivot_table(&#39;prop_id&#39;, rows=(&#39;srch_id&#39;,&#39;date_time&#39;,&#39;site_id&#39;,&#39;visitor_location_country_id&#39;,&#39;srch_destination_id&#39;,&#39;random_bool&#39;), aggfunc=&#39;count&#39;)
+</code></pre>
+
+<p>This was also a good start, but it doesn&#39;t have the sums and means incorporated and returns as series, despite the table-esque look on the screen.</p>
+
+<h1>Stage 3 - Try it again in R</h1>
+
+<p>This time, we&#39;ll load and extract our favorite columns immediately.</p>
+
+<pre><code class="r">full_train &lt;- read.csv(&quot;train35K.csv&quot;, stringsAsFactors = F)
+str(full_train)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    34999 obs. of  54 variables:
+##  $ srch_id                    : chr  &quot;1&quot; &quot;1&quot; &quot;1&quot; &quot;1&quot; ...
+##  $ date_time                  : chr  &quot;2013-04-04 08:32:15&quot; &quot;2013-04-04 08:32:15&quot; &quot;2013-04-04 08:32:15&quot; &quot;2013-04-04 08:32:15&quot; ...
+##  $ site_id                    : chr  &quot;12&quot; &quot;12&quot; &quot;12&quot; &quot;12&quot; ...
+##  $ visitor_location_country_id: chr  &quot;187&quot; &quot;187&quot; &quot;187&quot; &quot;187&quot; ...
+##  $ visitor_hist_starrating    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ visitor_hist_adr_usd       : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ prop_country_id            : chr  &quot;219&quot; &quot;219&quot; &quot;219&quot; &quot;219&quot; ...
+##  $ prop_id                    : chr  &quot;893&quot; &quot;10404&quot; &quot;21315&quot; &quot;27348&quot; ...
+##  $ prop_starrating            : chr  &quot;3&quot; &quot;4&quot; &quot;3&quot; &quot;2&quot; ...
+##  $ prop_review_score          : chr  &quot;3.5&quot; &quot;4.0&quot; &quot;4.5&quot; &quot;4.0&quot; ...
+##  $ prop_brand_bool            : chr  &quot;1&quot; &quot;1&quot; &quot;1&quot; &quot;1&quot; ...
+##  $ prop_location_score1       : chr  &quot;2.83&quot; &quot;2.2&quot; &quot;2.2&quot; &quot;2.83&quot; ...
+##  $ prop_location_score2       : chr  &quot;0.0438&quot; &quot;0.0149&quot; &quot;0.0245&quot; &quot;0.0125&quot; ...
+##  $ prop_log_historical_price  : chr  &quot;4.95&quot; &quot;5.03&quot; &quot;4.92&quot; &quot;4.39&quot; ...
+##  $ position                   : chr  &quot;27&quot; &quot;26&quot; &quot;21&quot; &quot;34&quot; ...
+##  $ price_usd                  : chr  &quot;104.77&quot; &quot;170.74&quot; &quot;179.8&quot; &quot;602.77&quot; ...
+##  $ promotion_flag             : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ srch_destination_id        : chr  &quot;23246&quot; &quot;23246&quot; &quot;23246&quot; &quot;23246&quot; ...
+##  $ srch_length_of_stay        : chr  &quot;1&quot; &quot;1&quot; &quot;1&quot; &quot;1&quot; ...
+##  $ srch_booking_window        : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ srch_adults_count          : chr  &quot;4&quot; &quot;4&quot; &quot;4&quot; &quot;4&quot; ...
+##  $ srch_children_count        : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ srch_room_count            : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ srch_saturday_night_bool   : chr  &quot;1&quot; &quot;1&quot; &quot;1&quot; &quot;1&quot; ...
+##  $ srch_query_affinity_score  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ orig_destination_distance  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ random_bool                : chr  &quot;1&quot; &quot;1&quot; &quot;1&quot; &quot;1&quot; ...
+##  $ comp1_rate                 : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp1_inv                  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp1_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp2_rate                 : chr  &quot;0&quot; &quot;NULL&quot; &quot;0&quot; &quot;-1&quot; ...
+##  $ comp2_inv                  : chr  &quot;0&quot; &quot;NULL&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ comp2_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;5&quot; ...
+##  $ comp3_rate                 : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;-1&quot; ...
+##  $ comp3_inv                  : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ comp3_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;5&quot; ...
+##  $ comp4_rate                 : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp4_inv                  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp4_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp5_rate                 : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ comp5_inv                  : chr  &quot;0&quot; &quot;1&quot; &quot;0&quot; &quot;1&quot; ...
+##  $ comp5_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp6_rate                 : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp6_inv                  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp6_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp7_rate                 : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp7_inv                  : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp7_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ comp8_rate                 : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;-1&quot; ...
+##  $ comp8_inv                  : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ comp8_rate_percent_diff    : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;5&quot; ...
+##  $ click_bool                 : chr  &quot;0&quot; &quot;0&quot; &quot;0&quot; &quot;0&quot; ...
+##  $ gross_bookings_usd         : chr  &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; &quot;NULL&quot; ...
+##  $ booking_bool               : int  0 0 0 0 0 0 0 0 0 0 ...
+</code></pre>
+
+<pre><code class="r">length(table(full_train$srch_id))
+</code></pre>
+
+<pre><code>## [1] 1417
+</code></pre>
+
+<pre><code class="r">
+vars_to_keep = c(&quot;srch_id&quot;, &quot;date_time&quot;, &quot;site_id&quot;, &quot;visitor_location_country_id&quot;, 
+    &quot;srch_destination_id&quot;, &quot;random_bool&quot;, &quot;prop_id&quot;, &quot;prop_starrating&quot;, &quot;prop_review_score&quot;, 
+    &quot;click_bool&quot;, &quot;booking_bool&quot;)
+
+full_train &lt;- full_train[vars_to_keep]
+</code></pre>
+
+<h2>Method 3 - create a search level data set for each of the count, sum, and mean variables and merge on srch_id</h2>
+
+<pre><code class="r">first_sub = full_train[1:7]
+first_agg &lt;- aggregate(prop_id ~ ., data = first_sub, FUN = length)
+table_names &lt;- names(first_agg)
+table_names[length(table_names)] &lt;- &quot;count&quot;
+names(first_agg) &lt;- table_names
+
+second_sub = full_train[c(1, 8, 9)]
+second_agg &lt;- aggregate(cbind(as.integer(prop_starrating), as.integer(prop_review_score)) ~ 
+    ., data = second_sub, FUN = mean, na.rm = T)
+</code></pre>
+
+<pre><code>## Warning: NAs introduced by coercion
+## Warning: NAs introduced by coercion
+</code></pre>
+
+<pre><code class="r">names(second_agg) &lt;- c(&quot;srch_id&quot;, &quot;avg_prop_starrating&quot;, &quot;avg_prop_review_score&quot;)
+
+third_sub &lt;- full_train[c(1, 10, 11)]
+third_agg &lt;- aggregate(cbind(as.integer(click_bool), as.integer(booking_bool)) ~ 
+    ., data = third_sub, FUN = sum, na.rm = T)
+</code></pre>
+
+<pre><code>## Warning: NAs introduced by coercion
+</code></pre>
+
+<pre><code class="r">names(third_agg) &lt;- c(&quot;srch_id&quot;, &quot;search_clicks&quot;, &quot;search_bookings&quot;)
+
+merge_one = merge(first_agg, second_agg)
+search_table = merge(merge_one, third_agg)
+head(search_table)
+</code></pre>
+
+<pre><code>##   srch_id           date_time site_id visitor_location_country_id
+## 1       1 2013-04-04 08:32:15      12                         187
+## 2    1002 2013-01-04 10:40:14      24                         216
+## 3    1004 2013-06-18 12:53:21      32                         220
+## 4    1006 2012-12-12 17:59:53       5                         219
+## 5    1007 2013-01-04 00:41:08       5                         158
+## 6    1008 2012-12-27 11:13:22       5                          23
+##   srch_destination_id random_bool count avg_prop_starrating
+## 1               23246           1    28               3.071
+## 2               23495           0    28               4.000
+## 3               16363           1    32               4.031
+## 4                3073           0    33               3.303
+## 5               24232           0     6               3.000
+## 6               24700           0    31               3.968
+##   avg_prop_review_score search_clicks search_bookings
+## 1                 3.214             1               1
+## 2                 4.179             1               1
+## 3                 3.688             1               0
+## 4                 3.545             1               1
+## 5                 4.167             1               1
+## 6                 3.903             1               1
+</code></pre>
+
+<p>This is great!  I&#39;m pretty sure!  I think I have my dataframe, so let&#39;s get a&#39;fitting.  </p>
+
+<pre><code class="r"># model &lt;- glm(search_bookings ~ ., data=search_table, family=&#39;binomial&#39;)
+# summary(model)
+</code></pre>
+
+<p>And here&#39;s where it hangs.  Will try to let it run tonight and see where I can go tomorrow&hellip;</p>
+
+<p>For fun, here are some plots.  Bookings slightly up based on property reviews but down if higher star properties shown?  Subtle implications - I look forward to the outputs from glm to understand what variables are driving.  Could also think about some correlations as a super basic exploration&hellip;</p>
+
+<pre><code class="r">boxplot(avg_prop_review_score ~ search_bookings, data = search_table)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-4"/> </p>
+
+<pre><code class="r">boxplot(avg_prop_starrating ~ search_bookings, data = search_table)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-4"/> </p>
+
+</body>
+
+</html>
+

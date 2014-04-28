@@ -1,0 +1,115 @@
+Excuses, excuses
+========================================================
+
+First of all, yes, my excuse is in R, so I've already failed the logistic regression assignment.  But hear me out.  
+
+I have stubbornly decided that I will not spend my limited time on toy problems and turned to Kaggle for a dataset in the, you guessed it, hotel industry.  I'm looking at the Expedia Kaggle competition where competitors must predict the optimal sort order of hotels on the Expedia search page to maximize booked revenue.  I'm looking to classify a simpler problem - what is the likelihood of a single "search" resulting in a booking? 
+
+The TL;DR version of my excuse is that I've spent 10+ hours trying to massage some extract of this 2.4B dataset into the training set with the variables I want to use.  I have gotten a dataframe I like - hooray! But running glm on this modest 1400 observations of 10 variables seems to be crashing my system - boo.  So I will spending the time you all are learning about deep learning on Monday to put my kids to bed then get back to work on this assignment.
+
+And now for some code.
+
+# Stage 1 - Getting the raw data
+
+The full 2.4GB training set and variable documentation may be found here: http://www.kaggle.com/c/expedia-personalized-sort/data.  To make the dataset manageable, I sliced out the first 100K of 9.9M rows in the shell.
+
+```
+$ wc train.csv  
+$ touch train100K.csv
+$ head -100000 train.csv > train100K.csv
+```
+
+There was no happiness when I tried to read into Python - around line 38000 there start to be some entries with commas instead of periods within some of the decimal values - hence csv readers are unhappy.  I really don't know how to solve this.  
+
+### Q1: How could I use pd.read_csv to read in a few extra columns to catch the overflow variables in the buggy lines with extra commas?  Another path - how do you specify datatypes to expect in each column?
+
+If I had that, I'd then delete out all lines that included those extra columns (after testing for more systematic issues).  For now, let's just read in 35K lines.
+
+```
+$ touch train35K.csv
+$ head -35000 train.csv > train35K.csv
+```
+# Stage 2 - Python
+
+```
+>>> import pandas as pd
+>>> import numpy as np
+>>> train = pd.read_csv("train35K.csv")   # throws a specify dtype warning 
+>>> len(train['srch_id'].value_counts())   
+```
+There are 1419 unique search ids in this data set.  Each has a few defining characteristics - search id, date/time, visitor location, search destination, etc..., These characteristics are copied down the several rows in the data set corresponding to each search which then also list out the characteristics of each hotel listed on the search page, including property location and ratings, and actual click or booking flag.  The proposal is to use logistic regression to determine the likelihood of a booking given the customer origin, destination market, average rating of hotels shows, number of hotels shown in a search, and other search-level variables.  To accomplish this, we need to roll up the 35K rows into 1419 searches with the hotel-level variables aggregated.
+
+### Q2: How can I get a nice data frame (or array) that includes the search level variables (duplicated across relevant rows) and the aggregated variables including a count, sums (of click/book booleans), and means (property ratings)?   Three unsatisfying methods proposed below.
+
+## Method 1: create a search level data set using groupby and aggregate
+```
+>>> search_table = train.groupby(['srch_id','date_time','site_id','visitor_location_country_id','srch_destination_id','random_bool']).aggregate({'prop_id':'count','prop_starrating':'mean','prop_review_score':'mean','click_bool':'sum', 'booking_bool':'sum'})
+```
+This looks perfect on screen, but returns as a dataframe with just the five aggregated variables as columns.  The other 6 columns are grouped as some kind of index and would not be accessible to use as model features.
+
+
+## Method 2: create a search level data set using pd.pivot_table
+```
+>>> working_table = train.pivot_table('prop_id', rows=('srch_id','date_time','site_id','visitor_location_country_id','srch_destination_id','random_bool'), aggfunc='count')
+```
+This was also a good start, but it doesn't have the sums and means incorporated and returns as series, despite the table-esque look on the screen.
+
+# Stage 3 - Try it again in R
+
+This time, we'll load and extract our favorite columns immediately.
+```{r}
+full_train <- read.csv('train35K.csv', stringsAsFactors=F)
+str(full_train)
+length(table(full_train$srch_id))
+
+vars_to_keep = c('srch_id',
+                'date_time',
+                'site_id',
+                'visitor_location_country_id',
+                'srch_destination_id',
+                'random_bool',
+                'prop_id',
+                'prop_starrating',
+                'prop_review_score',
+                'click_bool', 
+                'booking_bool'  )
+
+full_train <- full_train[vars_to_keep]
+```
+
+## Method 3 - create a search level data set for each of the count, sum, and mean variables and merge on srch_id
+``` {r}
+first_sub = full_train[1:7]
+first_agg <- aggregate(prop_id~., data=first_sub, FUN=length)
+table_names <- names(first_agg)
+table_names[length(table_names)] <- 'count'
+names(first_agg) <- table_names
+
+second_sub = full_train[c(1,8,9)]
+second_agg <- aggregate(cbind(as.integer(prop_starrating),as.integer(prop_review_score)) ~ ., data=second_sub, FUN=mean, na.rm=T)
+names(second_agg) <- c('srch_id','avg_prop_starrating', 'avg_prop_review_score')
+
+third_sub <- full_train[c(1,10,11)]
+third_agg <-aggregate(cbind(as.integer(click_bool), as.integer(booking_bool))~., data=third_sub, FUN=sum, na.rm=T)
+names(third_agg) <- c('srch_id', 'search_clicks', 'search_bookings')
+
+merge_one = merge(first_agg,second_agg)
+search_table = merge(merge_one, third_agg)
+head(search_table)
+```
+
+This is great!  I'm pretty sure!  I think I have my dataframe, so let's get a'fitting.  
+
+```{r}
+#model <- glm(search_bookings ~ ., data=search_table, family="binomial")
+#summary(model)
+```
+
+And here's where it hangs.  Will try to let it run tonight and see where I can go tomorrow...
+
+For fun, here are some plots.  Bookings slightly up based on property reviews but down if higher star properties shown?  Subtle implications - I look forward to the outputs from glm to understand what variables are driving.  Could also think about some correlations as a super basic exploration. . .
+
+```{r fig.width=7, fig.height=6}
+boxplot(avg_prop_review_score~search_bookings,data=search_table)
+boxplot(avg_prop_starrating~search_bookings,data=search_table)
+```
