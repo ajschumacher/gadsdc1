@@ -1,0 +1,117 @@
+# Logistic Assignment (Lemon Dataset)
+
+## View this on [rpubs](http://rpubs.com/pgrimm52/gads-log)
+
+## Let's load some useful libraries
+```{r}
+library("ROCR")
+library("SDMTools")
+library("ggplot2")
+library("DAAG")
+library("boot")
+```
+
+## Now for our datasets
+```{r}
+kaggle_train <- read.csv("/Users/philipp/Desktop/lemon/train.csv")
+kaggle_test <- read.csv("/Users/philipp/Desktop/lemon/test.csv")
+kaggle_solution <- read.csv("/Users/philipp/Desktop/lemon/solution.csv")
+```
+
+## What does our base dataset even look like?
+```{r}
+str(kaggle_train)
+```
+
+### What proportion of cars are lemons?
+```{r}
+mean(kaggle_train$IsBadBuy)
+```
+
+## It's graphics time!
+```{r}
+boxplot(kaggle_train$VehicleAge ~ kaggle_train$IsBadBuy, xlab="Kicked?", ylab="Vehicle Age")
+ggplot(kaggle_train, aes(x=VehBCost, fill=factor(IsBadBuy))) + geom_density(alpha=.3) + xlim(0, 15000)
+ggplot(kaggle_train, aes(x=VehOdo, fill=factor(IsBadBuy))) + geom_density(alpha=.3)
+barplot(prop.table(table(kaggle_train$IsBadBuy, kaggle_train$Color),2), xlab = "Color", ylab = "Kicked Ratio")
+```
+
+## Let's try a simple formula for our logistic regression
+```{r}
+model_formula.1 = IsBadBuy ~ VehicleAge + VehBCost + VehOdo
+model.1 <- glm(model_formula.1, data=kaggle_train, family="binomial")
+summary(model.1)
+```
+
+## How does our model perform against the full dataset?
+```{r}
+pred.1 <- predict(model.1, kaggle_train, type="response")
+hist(pred.1)
+```
+
+## Time to examine a bunch of plots related to our model:
+```{r}
+pred.rocr.1 <- prediction(predictions=pred.1, labels=kaggle_train$IsBadBuy)
+```
+### Accuracy: what percentage are correctly classified?
+```{r}
+plot(performance(pred.rocr.1, measure='acc'))
+```
+### Precision: what percentage of positive predictions are correct?
+```{r}
+plot(performance(pred.rocr.1, measure='prec'))
+```
+### Recall: what percentage of all positives were identified?
+```{r}
+plot(performance(pred.rocr.1, measure='rec')) 
+```
+### Receiver Operator Curve (ROC)
+```{r}
+plot(performance(pred.rocr.1, 'tpr', 'fpr'))
+```
+### AUC (Area Under the Curve)
+```{r}
+auc <- performance(pred.rocr.1, measure='auc')
+auc@y.values[[1]]
+```
+
+## Choosing a threshold of 0.2 (yes, it's arbitrary)
+```{r}
+pred <- ifelse(pred.1>0.2,1,0)
+sum(pred)/length(pred)
+```
+
+## Hello, confusion matrix!
+```{r}
+(cfm <- confusion.matrix(kaggle_train$IsBadBuy, pred.1, threshold=0.2))
+(cfm[1,1]+cfm[2,2])/length(pred.1)
+```
+
+## Testing against our full dataset is not a good idea - why don't we cross-validate?
+```{r}
+cross_val <- function(data, label_column, model_formula, folds_number, threshold){
+  fold <- sample(folds_number, nrow(data), replace=TRUE)
+  eval <- sapply(1:folds_number, function(i){
+    train <- data[fold != i, ]
+    test <- data[fold == i, ]
+    model <- glm(model_formula, data=train, family="binomial")
+    pred <- predict(model, test, type="response")
+    pred_threshold <- ifelse(pred>threshold,1,0)
+    return( sum(test[,label_column]==pred_threshold)/length(pred_threshold) )
+  })
+  return(mean(eval))
+}
+
+cross_val(kaggle_train, "IsBadBuy", model_formula.1, 10, 0.3)
+```
+
+## Now let's apply our model to the new data
+```{r}
+pred.test <- predict(model.1, kaggle_test, type="response")
+pred.test.threshold <- ifelse(pred.test>0.3, 1, 0)
+```
+
+## Our model accuracy is (...drumroll...):
+```{r}
+sum(pred.test.threshold == kaggle_solution$IsBadBuy)/length(kaggle_solution$IsBadBuy)
+```
