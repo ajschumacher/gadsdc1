@@ -6,4 +6,4 @@ notes*
 email_classify.R
 John_K_naive_bayes_class.py
 John_K_vowpal_rabbit.py
-*.ipynb
+#*.ipynb
