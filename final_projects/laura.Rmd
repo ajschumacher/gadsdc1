@@ -1,0 +1,517 @@
+Price Predition and Fraudulence Detection
+========================================================
+```{r}
+library(MASS)
+library(knitr)
+library(pastecs)
+library(robustbase)
+```
+
+I have a dataset of crowdsourced data that gives me pricing merged with another dataset of product information like container type, size, unit of size measurement, etc. My goals for this project are to:
+- Identify false crowdsourced data
+- Predict pricing of a given product in a given store
+
+So far I will only address goal 1, though its implementation will influence goal 2.
+
+Data Subsetting
+---
+To achieve goal 1, I will create a multiple robust regression fit to pricing based on some subset of the features of a product availabile to me. Then, using the residuals of my crowdsourced prices from the fit, I will flag widely varying observations as potential false values. I will check the accuracy of my model by doing price checks on the values I flag.
+
+Since I am using a robust regression to flag potentially false data, I am assuming that most of the true data is packed tightly together (so that the robust regression fits to the true data, and the false data remains distant from the fit). This becomes a problem for products that may have a huge spread in pricing (e.g. cars).
+
+Thus, for this analysis, I will subset my pricing data by
+- manufacturer (e.g. The Coca-Cola Company), and
+- category (e.g. Beverages). 
+
+Why?
+
+I know that products being from the same manufacturer have similar pricing, I assume because of the same product/warehousing costs.
+
+As for categories, intuitively, you would expect these products to be priced similarly, dependant on the product's size and count, and potentially on the container used, the brand, or the type within beverages (e.g. coke would be more expensive than water). I would also expect this combination to give me a set of data that all has generally the same unit (e.g. oz, pound, unit) and container type (bottle, carton). This is important because to keep size as a continous variable, I must standardize the unit of measurement (convert liters, gallons, etc to fluid ounces).
+
+Data View
+---
+First, I subsetted my database to recieve data only from the manufacturer The Coca Cola Company and only products in the Category Beverages.
+
+I read in data CSV identifying "NULL" as a NA value and converting all strings to factors. Then I omitted all the NA data to get only rows for which I have all the feature information. I make a small version for my own testing purposes.
+
+```{r }
+setwd("/Users/dmig/Dropbox/Pricespotting/Price Variance/")
+data2 <- read.csv("Data/BeveragesData.csv", na.strings=(c("NULL")))
+data2 <- data2[,names(data2)!='region_id'] #drop region_id since this data is sparse
+datadrop <- na.omit(data2)
+small <- datadrop[sample(1:nrow(datadrop), 1000, replace=FALSE),]
+summary(datadrop)
+```
+
+
+```{r}
+summary(datadrop$price)
+d <- density(datadrop$price)
+plot(d, main="Distribution of price variable", sub="Beverage products")
+boxplot(datadrop$price)
+d5 <- density(datadrop$price[datadrop$price<5.99])
+plot(d5, main="Distribution of price variable for values under 3rd quartile (5.99)", sub="Beverage products")
+```
+
+I know I need to standardize my unit, so first I check to see what units types exist in this data subset.
+```{r}
+summary(datadrop$unit_desc)
+```
+
+I can approximate Liter and Milliliter to Fluid Ounce and assume Ounce is a mislabelling of Fluid Ounce, but all Count items I will have to drop as there is no conversion. 
+Model Building using RMSE and R squared
+===
+Using pre-converted file, import and create training and test subsets to estimate model efficiency.
+```{r standardize and subset data}
+setwd("/Users/dmig/Dropbox/Pricespotting/Price Variance/")
+data2 <- read.csv("BeveragesData.csv", na.strings=(c("NULL")))
+data2<- data2[,names(data2)!='region_id']
+datadrop = na.omit(data2)
+
+dataconv<-datadrop
+dataconv <- dataconv[dataconv$unit_count!=0,]
+dataconv <- dataconv[dataconv$chain_desc!='NA',]
+dataconv <- dataconv[,1:17]
+conversion <- c('Liter'=33.844, 'Pint'=16.0, 'Quart'=32.0, 'Gallon'=128.0, 'Milliliter'=0.033814, 'Ounce'=1, 'Fluid Ounce'=1, 'Count'=0, 'Dozen'=0, 'Gram'=0, 'Pound'=0)
+
+dataconv$size <- dataconv$size * conversion[dataconv$unit_desc]
+dataconvdrop <- dataconv
+
+dataconvdrop <- dataconvdrop[dataconvdrop$unit_desc!='Count',]
+dataconvdrop <- dataconvdrop[dataconvdrop$unit_desc!='Dozen',]
+dataconvdrop <- dataconvdrop[dataconvdrop$unit_desc!='',]
+dataconvdrop <- dataconvdrop[dataconvdrop$unit_desc!='Gram',]
+dataconvdrop <- dataconvdrop[dataconvdrop$unit_desc!='Pound',]
+
+#make subsets that are the above the 3rd quartile (outliers), below the first quartile (bottomliers), and within the middle 50% (inliers)
+dataoutliers <- dataconvdrop[dataconvdrop$price>10,]
+databottomliers <- dataconvdrop[dataconvdrop$price<1.19,]
+datainliers <- dataconvdrop[dataconvdrop$price<10,]
+datainliers <- datainliers[datainliers$price>1.19,]
+
+#sample data into train and test sets
+set.seed(1)
+random <- sample(nrow(dataconvdrop), nrow(dataconvdrop) * 2/3)
+train <- dataconvdrop[random,]
+train <- na.omit(train)
+test <- dataconvdrop[-random,]
+test <- na.omit(test)
+nrow(data2) - (nrow(test)+nrow(train)) #this is how much data I've lost since the first import
+sum(nrow(test),nrow(train)) 
+```
+
+Build 4 models of increasing complexity and store RMSE, R squared, and residual stats
+```{r modelbuilding}
+rmse <- function(a, b) {
+    sqrt(mean((a - b)^2))
+}
+
+attach(train)
+
+error = data.frame()
+model.1 <- lm(price/unit_count ~ size, data=train)
+summary(model.1)
+pred.1 <- predict(model.1, test)
+error['model.1', 'rmse'] = rmse(pred.1*test['unit_count'], test['price'])
+error['model.1', 'r.squared'] = summary(model.1)['r.squared']
+error['model.1', 'minres'] <- (summary(summary(model.1)[['residuals']])[['Min.']])
+error['model.1', 'medres'] <- (summary(summary(model.1)[['residuals']])[['Median']])
+error['model.1', 'maxres'] <- (summary(summary(model.1)[['residuals']])[['Max.']])
+
+
+model.2 <- lm(price/unit_count ~ size:unit_count, data=train)
+summary(model.2)
+pred.2 <- predict(model.2, test)
+error['model.2', 'rmse'] = rmse(pred.2*test['unit_count'], test['price'])
+error['model.2', 'r.squared'] = summary(model.2)['r.squared']
+error['model.2', 'minres'] <- (summary(summary(model.2)[['residuals']])[['Min.']])
+error['model.2', 'medres'] <- (summary(summary(model.2)[['residuals']])[['Median']])
+error['model.2', 'maxres'] <- (summary(summary(model.2)[['residuals']])[['Max.']])
+
+
+model.3 <- lm(price/unit_count ~ size:unit_count:product_type_desc, data=train)
+summary(model.3)
+pred.3 <- predict(model.3, test)
+error['model.3', 'rmse'] = rmse(pred.3*test['unit_count'], test['price'])
+error['model.3', 'r.squared'] = summary(model.3)['r.squared']
+error['model.3', 'minres'] <- (summary(summary(model.3)[['residuals']])[['Min.']])
+error['model.3', 'medres'] <- (summary(summary(model.3)[['residuals']])[['Median']])
+error['model.3', 'maxres'] <- (summary(summary(model.3)[['residuals']])[['Max.']])
+
+
+
+model.5 <- lm(price/unit_count ~ size:unit_count:product_type_desc + unit_count:container_desc + chain_desc, data=datainliers)
+summary(model.5)
+test <- test[test$chain_desc!= "Great Wall Supermarket",]
+test <- test[test$chain_desc!=  "Outpost ",]
+test <- test[test$chain_desc!=  "Starbucks",]
+test <- droplevels(test)
+pred.5 <- predict(model.5, test)
+
+
+error['model.5', 'rmse'] = rmse(pred.5*test['unit_count'], test['price'])
+error['model.5', 'r.squared'] = summary(model.5)['r.squared']
+error['model.5', 'minres'] <- (summary(summary(model.5)[['residuals']])[['Min.']])
+error['model.5', 'medres'] <- (summary(summary(model.5)[['residuals']])[['Median']])
+error['model.5', 'maxres'] <- (summary(summary(model.5)[['residuals']])[['Max.']])
+
+
+print(error)
+
+```
+Robust Methods
+====
+I know that there is false data that could be skewing my fit, so I want to run the same models with RLM. 
+
+
+```{r baby RLMs}
+rlm.model.1 <- lmrob(price ~ size, data=train)
+summary(rlm.model.1)
+rlm.pred.1 <-predict(rlm.model.1, test)
+error['rlm.model.1', 'rmse'] <- rmse(rlm.pred.1, test['price'])
+error['rlm.model.1', 'minres'] <- (summary(summary(rlm.model.1)[['residuals']])[['Min.']])
+error['rlm.model.1', 'medres'] <- (summary(summary(rlm.model.1)[['residuals']])[['Median']])
+error['rlm.model.1', 'maxres'] <- (summary(summary(rlm.model.1)[['residuals']])[['Max.']])
+
+rlm.model.2 <- lmrob(price ~ size:unit_count, data=train)
+summary(rlm.model.2)
+rlm.pred.2<-predict(rlm.model.2, test)
+error['rlm.model.2', 'rmse'] <- rmse(rlm.pred.2, test['price'])
+error['rlm.model.2', 'minres'] <- (summary(summary(rlm.model.2)[['residuals']])[['Min.']])
+error['rlm.model.2', 'medres'] <- (summary(summary(rlm.model.2)[['residuals']])[['Median']])
+error['rlm.model.2', 'maxres'] <- (summary(summary(rlm.model.2)[['residuals']])[['Max.']])
+```
+Below are the more complex models which fail to converge when using the lmrob package.
+```{r eval=FALSE}
+#singular error
+rlm.model.3 <- lmrob(price ~ size:unit_count:product_type_desc, data=train, control=lmrob.control(fast.s.large.n = Inf))
+summary(rlm.model.3)
+rlm.pred.3<-predict(rlm.model.3, test)
+error['rlm.model.3', 'rmse'] <- rmse(rlm.pred.3, test['price'])
+error['rlm.model.3', 'minres'] <- (summary(summary(rlm.model.3)[['residuals']])[['Min.']])
+error['rlm.model.3', 'medres'] <- (summary(summary(rlm.model.3)[['residuals']])[['Median']])
+error['rlm.model.3', 'maxres'] <- (summary(summary(rlm.model.3)[['residuals']])[['Max.']])
+
+rlm.model.4 <- lmrob(price ~ size:unit_count:product_type_desc + container_desc:unit_count, data=train, control=lmrob.control(fast.s.large.n = Inf))
+summary(rlm.model.4)
+rlm.pred.4<-predict(rlm.model.4, test)
+error['rlm.model.4', 'rmse'] <- rmse(rlm.pred.4, test['price'])
+error['rlm.model.4', 'minres'] <- (summary(summary(rlm.model.4)[['residuals']])[['Min.']])
+error['rlm.model.4', 'medres'] <- (summary(summary(rlm.model.4)[['residuals']])[['Median']])
+error['rlm.model.4', 'maxres'] <- (summary(summary(rlm.model.4)[['residuals']])[['Max.']])
+
+geterrors <- function(model, edf, testdf, y){
+  edf[as.string(model), 'rmse'] <-rmse(model, testdf[y])
+  edf[as.string(model), 'minres'] <- (summary(summary(model)[['residuals']])[['Min.']])
+  edf[as.string(model), 'medres'] <- (summary(summary(model)[['residuals']])[['Median']])
+  edf[as.string(model), 'maxres'] <- (summary(summary(model)[['residuals']])[['Max.']])
+}
+```
+
+The failure of the RLM models to converge due to singularity error prompted me to look for what the cause of the singularity - or, case where a certain combination of variables only has one observation, occured.
+```{r eval=FALSE}
+
+#test for singularities
+k<- formula(price ~ size:unit_count*product_type_desc + unit_count:container_desc)
+model.matrix.5<- model.matrix(k, data=train)
+items <- apply(model.matrix.5, 2, function(e){sum(e)})
+issues <- items[which(items<50)]
+print(issues)
+#exclude singularities
+include<- c(names(items[which(items>50)]))
+model.matrix.5 <-  model.matrix.5[,include]
+items <- apply(model.matrix.5, 2, function(e){sum(e)})
+issues <- items[which(items<50)]
+print(issues)
+
+#use the edited explanatory variable matrix (model.matrix.5) and the y responses for each row (train$price) to generate a RLM
+                                
+rlm.model.5 <- rlm(model.matrix.5, train$price, method="MM") #this still doesn't work
+
+#is it collinearity? here is an analysis:
+correlations <- round(cor(model.matrix.5))
+sums <- apply(correlations,2, function(e){sum(e, na.rm=TRUE)})
+print(sums)
+issues <- names(which(sums>1)) #all should have 1 as colinear with themselves
+print(issues)
+
+rlm.model.a <- rlm(price~ size:unit_count:product_type_desc, data=train)
+
+rlm.model.5 <- rlm(price ~ unit_count:container_desc, data=train)
+model.5 <- lm(price ~ size:unit_count*product_type_desc + unit_count:container_desc, data=train)
+summary(model.5)
+pred.5.train <- predict(model.5, train)
+pred.5 <- predict(model.5, test)
+error['model.5', 'rmse'] = rmse(pred.5, test['price'])
+error['model.5', 'r.squared'] = summary(model.5)['r.squared']
+error['model.5', 'minres'] <- (summary(summary(model.5)[['residuals']])[['Min.']])
+error['model.5', 'medres'] <- (summary(summary(model.5)[['residuals']])[['Median']])
+error['model.5', 'maxres'] <- (summary(summary(model.5)[['residuals']])[['Max.']])
+
+print(error)
+```
+```{r}
+error = data.frame()
+```
+Working robust model
+===
+To overcome singularities, I can use the package lmrob with the defaults singular.ok=TRUE.
+```{r working robust model}
+lmrob.model.4 <- lmrob(price/unit_count ~ size:unit_count:product_type_desc + unit_count:container_desc, data=train, control=lmrob.control(fast.s.large.n = Inf, seed=1))
+summary(lmrob.model.4)
+lmrob.pred.4.train <-predict(lmrob.model.4, train)
+lmrob.pred.4<-predict(lmrob.model.4, test)
+error['lmrob.model.4', 'rmse'] <- rmse(lmrob.pred.4, test['price'])
+error['lmrob.model.4', 'minres'] <- (summary(summary(lmrob.model.4)[['residuals']])[['Min.']])
+error['lmrob.model.4', 'medres'] <- (summary(summary(lmrob.model.4)[['residuals']])[['Median']])
+error['lmrob.model.4', 'maxres'] <- (summary(summary(lmrob.model.4)[['residuals']])[['Max.']])
+```
+
+Top model
+---
+
+The hypothesis behind pricing is that "more is more" - increased volume and increased number of containers will cost more. In addition, a product's price range is banded by its product type, since each product type has its own manufacturing process - for example, cola has a different manufacturing process than water, so to capture that cost, the price per volume will be banded by product type. The initial model will be:
+
+- size:unit_count:product_type (this captures total volume banded by product type)
+- unit_count:container_desc (this captures the total number of containers banded by container type)
+
+Future model inputs should be:
+- manufacturer_desc
+- list price regionID
+- brand type (national vs store)
+
+
+```{r eval=FALSE}
+results2 <- test
+results2['inliers'] <- cbind(pred.5)
+results['pred.4'] <- cbind(pred.4)
+results['pred.3'] <- cbind(pred.3)
+results['pred.2'] <- cbind(pred.2)
+results['pred.1'] <- cbind(pred.1)
+
+
+results <- test
+#results['rlm.pred.4'] <- cbind(rlm.pred.4)
+results['rlm.pred.3'] <- cbind(rlm.pred.3)
+results['rlm.pred.2'] <- cbind(rlm.pred.2)
+results['rlm.pred.1'] <- cbind(rlm.pred.1)
+```
+
+Top Model for Price Flagging
+---
+First, let's look at the predictions by a normal LM model:
+```{r LMmodel analysis}
+d1 <- cooks.distance(model.5)
+r <- stdres(model.5)
+a <- cbind(train, d1, r)
+cooks <- a[d1 > 4/nrow(train),]
+
+rabs <- abs(r)
+a <- cbind(pred.4.train, train, d1, r, rabs)
+asorted <- a[order(-rabs),]
+asorted[1:15,] #top 15 offenders by lm
+```
+
+And now, the top predictions by the robust model:
+```{r rlm.model.4}
+
+#cooks does not work on robust lms
+#d1 <-cooks.distance(lmrob.model.4)
+r <- stdres(lmrob.model.4)
+a <- cbind(train, r)
+#cooks <- a[d1 > 4/nrow(train),]
+lmrob.4.pred <- predict(lmrob.model.4, train)
+rabs <- abs(r)
+a <- cbind(lmrob.4.pred, train, r, rabs)
+asorted <- a[order(-rabs),]
+asorted[1:15,] #top 15 offenders by lmrob
+```
+
+
+
+```{r RLMmodel anallysis, eval=FALSE}
+d1 <- cooks.distance(rlm.model.2)
+r <- stdres(rlm.model.2)
+r2abs <- residuals(lmrob.model.2)
+a <- cbind(train, r)
+cooks <- a[d1 > 4/nrow(train),]
+
+rabs <- abs(r)
+a <- cbind(lmrob.pred.4.train, train, r, rabs, r2abs)
+asorted <- a[order(-r2abs),]
+
+#sort by 2Xstandard deviation of price
+sd(train$price)
+nrow(asorted[asorted$r2abs>2*sd(train$price),])
+flags <- asorted[1:nrow(asorted[asorted$r2abs>2*sd(train$price),]),]
+```
+```{r results='asis', eval=FALSE}
+kable(asorted[1:30,], 'html')
+```
+```{r results='asis', eval=FALSE}
+flags(asorted[1:30,], 'html')
+```
+
+Improvements Scheduled
+===
+- Additional model inputs: list price regionID, brand type (store vs national), manufacturer_desc (to process entire category at once)
+- Robust linear model vs OLS to decrease outlier leverage
+- Train on data with > 5 price points to prevent infinite standardized residuals
+- Exclude online stores
+- Size increase not linear
+
+Next Steps
+---
+- Improve model on above improvements
+- Expand size standardization scripts across other categories and cross validate on other categories
+- Residual analysis to identify residual cutoff for price flags
+- Price check grocery list for Beth to obtain accuracy
+- y=price/unit, after model go back to price !destroy the third dimension!
+- cbinding a model matrix that addresses singularities between container description and product type
+- extending my cuttof to 3x standard deviation ORRRR do percentage deviation
+- add containertype:productdesc to erase only the singuarlities
+
+There is also an ipython notebook with the most recent implementation of price flagging (using a much cruder, but more reliable, custom algorithm) using Domino for distributed processing. However, I don't want to post it on a public github.
+
+To work in
+---
+THE FOLLOWING GETS ERROR 'lqs' failed: all the sampled were singular
+===
+```{r lmRob, eval=FALSE}
+lmRob.model.4 <- lmRob(price ~ size:unit_count:product_type_desc + unit_count:container_desc, data=train, control=lmRob.control(seed=1))
+summary(lmRob.model.4)
+lmRob.pred.4<-predict(lmRob.model.4, train)
+error['lmRob.model.4', 'rmse'] <- rmse(lmrob.pred.4, test['price'])
+error['lmRob.model.4', 'minres'] <- (summary(summary(lmRob.model.4)[['residuals']])[['Min.']])
+error['lmRob.model.4', 'medres'] <- (summary(summary(lmRob.model.4)[['residuals']])[['Median']])
+error['lmRob.model.4', 'maxres'] <- (summary(summary(lmRob.model.4)[['residuals']])[['Max.']])
+
+
+print(error)
+```
+
+GLMnet Implementation
+===
+```{r eval=FALSE}
+g <- cv.glmnet(model.matrix.5, train$price, alpha=1)
+plot(g, xvar="lambda")
+```
+
+Odds and Ends
+---
+Code to find stuff that is missing values
+```
+sum(is.na(data$container_id))
+unique(data[which(is.na(data$container_desc)),'product_id'])
+```
+Code to data profile
+```
+dropduetoincorrectunit <- unique(datadrop[which(datadrop$unit_desc=='Count' | datadrop$unit_desc=='Dozen' | datadrop$unit_desc=='Gram' | datadrop$unit_desc=='Pound' | datadrop$unit_desc==''), 'product_id'])
+cleanup <- unique(data[which((is.na(data$chain_desc) | is.na(data$unit_desc) | is.na(data$container_desc) | is.na(data$brand_desc) | is.na(data$size))), 'product_id'])
+
+```
+Code to check coerced NAs, used when na.strings was not set to recognize NULL:
+```
+datanew <- data
+datanew[,3] <- as.numeric(data[,3]) #Nas introduced by coercion
+sum(is.na(datanew[,3])) #number of NAs induced by coercion
+subset(data, (is.na(datanew[,3])))#list of rows from original data that were coerced to NA when size was forced to numeric
+#appears that NULL is the culprit
+```
+Code to methodize model metric reporting.
+```
+store <- function(model, pred){
+  error[model, 'rmse'] = rmse(pred, test['price'])
+  error[model, 'r.squared'] = summary(model)['r.squared']
+}
+```
+
+```
+#make a dictionary
+conversion <- c('Liter'=33.844)
+x$unit_desc
+x$size*conversion[x$unit_desc]
+
+```
+
+Convert units custom function.
+```
+
+convertunits <- function(x){
+  for(index in 1:nrow(x)){
+   # if(is.na(x[index,]['unit_desc'])){
+    #  print("it's NA")
+     # break
+  #  }
+    if(x[index,]['unit_desc']=='Count'){
+    x[index,]['size'] <- NA
+    x[index,]['unit_desc'] <- NA
+    print( x[index,]['unit_desc'])
+
+  }
+    else if(x[index,]['unit_desc']=='Liter'){
+    x[index,]['size'] <- x[index,]['size']*33.844
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+
+  }
+    else if(x[index,]['unit_desc']=="Milliliter"){
+    x[index,]['size'] <- x[index,]['size']*0.033814
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+    print( x[index,]['unit_desc'])
+  }
+   else if(x[index,]['unit_desc']=="Ounce"){
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+    print( x[index,]['unit_desc'])
+  }
+  else if(x[index,]['unit_desc']=="Gallon"){
+      x[index,]['size'] <- x[index,]['size']*128.0
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+    print( x[index,]['unit_desc'])
+  }
+    else if(x[index,]['unit_desc']=="Quart"){
+      x[index,]['size'] <- x[index,]['size']*32.0
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+    print( x[index,]['unit_desc'])
+  }
+      else if(x[index,]['unit_desc']=="Pint"){
+      x[index,]['size'] <- x[index,]['size']*16.0
+    x[index,]['unit_desc'] <- "Fluid Ounce"
+    print( x[index,]['unit_desc'])
+  }
+}
+return(x)
+print("out of for loop")
+
+}
+```
+
+Below is the method I used to convert, but like a good cooking show, I will have some already-baked data ready for afterwards.
+```
+dataconv<-data2
+conversion <- c('Liter'=33.844, 'Pint'=16.0, 'Quart'=32.0, 'Gallon'=128.0, 'Milliliter'=0.033814)
+dataconv$size*conversion[dataconv$unit_desc]
+
+head(dataconv)
+sum(is.na(dataconv))
+dataconv <- na.omit(dataconv)
+dataconv <- dataconv[dataconv$unit_count!=0,]
+dataconv <- dataconv[dataconv$chain_desc!=NA,]
+dataconv <- dataconv[,1:17]
+```
+Convert units and create training and test subsets to estimate model efficiency.
+
+```
+set.seed(1)
+random <- sample(nrow(dataconv), nrow(dataconv) * 2/3)
+
+unitstandard<-convertunits(datadrop)
+unitstandard <- na.omit(unitstandard)
+summary(datadrop$unit_desc)
+summary(unitstandard$unit_desc)
+
+train <- dataconv[random,]
+
+test <- dataconv[-random,]
+
+```
