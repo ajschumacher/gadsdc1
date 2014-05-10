@@ -152,10 +152,9 @@ def k_means(X, n_clusters,
 
     """
     random_state = check_random_state(random_state)
-    best_labels, best_score, best_centers = None, None, None
+    best_labels, best_score, best_centers = None, np.inf, None
 
     # We are going to do `n_init` random starts and return the best one
-    old_score = np.inf
 
     for it in range(n_init):
         # run k-means once
@@ -164,12 +163,10 @@ def k_means(X, n_clusters,
         # determine if these results are the best so far
         # If so, update best_centers, best_labels, best_score
         # TODO: IMPLEMENT
-        if old_score > score:
+        if best_score > score:
             best_centers = centers
             best_labels = labels
             best_score = score
-
-        old_score = score
 
     return best_centers, best_labels, best_score
 
@@ -212,13 +209,11 @@ def _kmeans_single(X, n_clusters, max_iter=10, verbose=False, random_state=None)
     """
     random_state = check_random_state(random_state)
 
-    best_labels, best_score, best_centers = None, None, None
+    best_labels, best_score, best_centers = None, np.inf, None
     # init
     centers = _init_random_centroids(X, n_clusters, random_state=random_state)
     if verbose:
         print('Initialization complete')
-
-    old_score = np.inf
 
     for i in range(max_iter):
         # Figure out the labels, given the centers
@@ -229,12 +224,10 @@ def _kmeans_single(X, n_clusters, max_iter=10, verbose=False, random_state=None)
 
         # Is this run better than the last run?
         # If so, update best_centers, best_labels, best_score
-        if old_score > score:
+        if best_score > score:
             best_labels = labels
             best_score = score
             best_centers = centers
-
-        old_score = score
 
     return best_labels, best_score, best_centers
 
