@@ -1,0 +1,193 @@
+
+```{r loaddata, echo=FALSE}
+library(ggplot2)
+setwd("/Users/dmig/Dropbox/Pricespotting/Price Variance/Linear Regression")
+
+```
+
+
+Validating Crowdsourced Pricing
+========================================================
+author: Laura Lorenz
+date: May 19, 2014
+
+Problem
+========================================================
+
+PriceSpotting is an app that shows pricing for grocery and baby products at local stores in your area. The majority of our pricing is crowdsourced, predominantly from "rewards users" who are incentivized to enter pricing via cash rewards. As with any crowdsourced platform, a portion of the pricing is invalid, for reasons varying from human error to intentional cheating the system for rewards. Some observed behaviors include:
+
+- "Fat finger" phenomenon
+- Sales price entered in list price field
+- Intentionally entering in false pricing on products from home
+- Intentionally entering in false pricing on products in store 
+
+Data Entry
+========================================================
+<center><img src=pricespotting.png></center>
+
+Data
+========================================================
+
+- 40 million historical **list prices** over 228,528 unique products and 850 chains
+
+<center><table border=1><tr><td>Min.</td><td>    1st Qu.</td><td>    Median </td><td>	Mean </td><td> 		3rd Qu.  </td><td>  Max. </td></tr>
+<tr><td>0     </td><td>	3       </td><td>	 4      </td><td> 	30    	</td><td>	6 		</td><td>	94950000</td></tr></table>
+
+<table border=0 style="border:0;" align=center><tr><td> <img src=AllPriceDensity.png> </td><td>
+<img src=AllInlierPricesdensity.png></td></tr></table>
+</center>
+
+Data Con't
+========================================================
+- **Product data** including size, unit count, container type, brand, manufacturer, and a 3-tiered taxonomy (category, subcategory, type)
+- **Store data** including lat/lon, address, chain, hours, and in some cases, list price or sales price region
+
+Plan
+========================================================
+- *Predict pricing* via logistic regression for products using our historical pricing data based on product attributes.
+- De-emphasize (the known presence of) outliers using *robust regression* instead of regular ol' OLS
+- *Set cutoff* for residuals to delimit flagged (invalid) pricing from valid pricing
+- Profit
+
+Case Study: Beverages
+========================================================
+
+**Hypothesis** : Pricing goes up for a given product type as the volume of product and the number of containers increases.
+
+> <center>**price ~ size:unit_count:product_type + container_type:unit_count**</center>
+
+Case Study: Beverages Data Exploration
+========================================================
+
+ <center><img src=Inliers_density.png>
+ 
+ <center><table border=1><tr><td>Min.</td><td>    1st Qu.</td><td>    Median </td><td>  Mean </td><td> 		3rd Qu.  </td><td>  Max. </td></tr>
+<tr><td><font color=gray>0.010</font>     </td><td>	1.990       </td><td>	 3.290      </td><td> 	4.381    	</td><td>	5.490 		</td><td>	<font color=gray>10400.00</font></td></tr></table></center>
+
+Case Study: Beverages Data Cleaning
+========================================================
+- 82% of data retained after data cleaning to support regression model
+
+<table><tr><td><img src=lossofdatagraphic.png></td><td align=top>
+<ul>
+<li> Import: 565770
+
+<li> Drop nulls:	564685		<font color=red>-1085</font>
+
+<li> Drop invalids in predictors+: 564556		<font color=red>-129</font>
+
+<li> Drop inconvertible units: 463972		<font color=red>-100584</font>
+
+ </ul>   
+    </td></tr></table>
++unit_count=, chain_desc=NA, blanks
+
+Case Study: Beverages Testing Models
+========================================================
+- Price~size
+- Price~size:unit_count
+- Price~size:unit_count:product_type_desc
+- Price~size:unit_count:product_type_desc + unit_count:container_type_desc
+- Price~size:unit_count:product_type_desc + unit_count:container_type_desc + chain_desc
+- Or, price/unit_count ~ .
+- LM, RLM, and custom LM
+
+Case Study: Beverages Model Metrics OLS
+===========
+LM
+<table>
+<tr><td>LM</td></tr>
+<tr><td>  </td><td>rmse   </td><td> r.squared</td><td>   minres</td><td>  medres </td><td>maxres</td></tr>
+<tr><td>model.1</td><td> 17.37312</td><td> 8.320793e-07 </td><td>  -3.446</td><td> -1.2000 </td><td>129800</td></tr>
+<tr><td>model.2 </td><td>12.70093 </td><td>2.452413e-05  </td><td> -4.062 </td><td>-1.1380 </td><td>129800</td></tr>
+<tr><td>model.3</td><td> 10.40667 </td><td>2.384082e-04 </td><td>-186.600</td><td> -0.5899</td><td> 129800</td></tr>
+<tr><td>model.4 </td><td>12.78697</td><td> 4.454630e-04 </td><td> -77.050 </td><td>-0.4062 </td><td>129800</td></tr>
+<tr><td></td></tr></table>
+
+Case Study: Beverages Model Metrics Robust
+===========
+<table>
+<tr><td>RLM</td></tr>
+<tr><td>		</td><td>rmse</td><td>    r.squared   </td><td> minres  </td><td> medres</td><td> maxres</td></tr>
+<tr><td>rlm.model.1 </td><td> 5.285842   </td><td>        NA </td><td>   -3.675 </td><td>-0.03504 </td><td>129800</td></tr>
+<tr><td>rlm.model.2  </td><td> 5.250671    </td><td>       NA </td><td>  -59.640 </td><td>-0.06355</td><td> 129800</td></tr>
+<tr><td>rlm.model.3 </td><td>354.269831   </td><td>        NA </td><td>-8597.000</td><td> -0.08449</td><td> 129800</td></tr>
+<tr><td>rlm.model.4  </td><td>75.049714</td><td>           NA </td><td>-4396.000</td><td> -0.01361 </td><td>129800* 					*[did not converge]</td></tr>
+</table>
+
+
+
+Case Study: Beverages Robust predictions
+=====
+<h4>
+<table>
+<tr><td></td><td>lmrob.pred.4.train</td><td>price</td><td>product_desc</td><td>size</td><td>unit_desc</td><td>unit_count</td><td>container_desc</td><td>brand_desc</td><td>product_type_desc</td></tr>
+<tr><td>+</td><td>$1.90</td><td>$199.99</td><td>Zero Calorie Cola</td><td>67.688</td><td>Fluid Ounce</td><td>1</td><td>Plastic Bottle</td><td>Coca-Cola Zero</td><td>Cola</td></tr>
+<tr><td>/</td><td>$14.73</td><td>$89.85</td><td>Classic Cola</td><td>20</td><td>Fluid Ounce</td><td>24</td><td>Plastic Bottle</td><td>Coca-Cola</td><td>Cola</td></tr>
+<tr><td>/</td><td>$14.73</td><td>$89.85</td><td>Diet Coke</td><td>20</td><td>Fluid Ounce</td><td>24</td><td>Plastic Bottle</td><td>Diet Coke</td><td>Cola</td></tr>
+<tr><td>/</td><td>$11.45</td><td>$68.72</td><td>Mango Acai White Tea</td><td>64</td><td>Fluid Ounce</td><td>8</td><td>Plastic Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr>
+<tr><td>/</td><td>$3.46</td><td>$49.99</td><td>Classic Cola</td><td>8.5</td><td>Fluid Ounce</td><td>4</td><td>Glass Bottle</td><td>Coca-Cola</td><td>Cola</td></tr>
+<tr><td>/</td><td>$8.95</td><td>$48.00</td><td>Electrolytes Enhanced Water</td><td>50.766</td><td>Fluid Ounce</td><td>12</td><td>Plastic Bottle</td><td>Glaceau Smartwater</td><td>Sports Drinks</td></tr></table></h4>
+
+Case Study: Beverages Robust predictions 2
+=====
+<h4><table>
+<tr><td></td><td>lmrob.pred.4.train</td><td>price</td><td>product_desc</td><td>size</td><td>unit_desc</td><td>unit_count</td><td>container_desc</td><td>brand_desc</td><td>product_type_desc</td></tr>
+<tr><td>+</td><td>$1.59</td><td>$38.05</td><td>Organic Heavenly Lemon Tulsi Tea</td><td>16</td><td>Fluid Ounce</td><td>1</td><td>Glass Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr>
+<tr><td>+</td><td>$1.59</td><td>$36.45</td><td>Classic Green Tea</td><td>16</td><td>Fluid Ounce</td><td>1</td><td>Glass Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr>
+<tr><td>+</td><td>$1.35</td><td>$35.95</td><td>Cherry Cola</td><td>20</td><td>Fluid Ounce</td><td>1</td><td>Plastic Bottle</td><td>Coca-Cola</td><td>Cola</td></tr>
+<tr><td>--</td><td>$10.83</td><td>$45.19</td><td>Lori's Lemon Tea</td><td>59</td><td>Fluid Ounce</td><td>8</td><td>Plastic Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr>
+<tr><td>--</td><td>$12.63</td><td>$45.19</td><td>Just Green Unsweetened Tea</td><td>59</td><td>Fluid Ounce</td><td>8</td><td>Glass Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr>
+<tr><td>--</td><td>$12.63</td><td>$45.19</td><td>Mango Acai White Tea</td><td>59</td><td>Fluid Ounce</td><td>8</td><td>Glass Bottle</td><td>Honest Tea</td><td>Tea Drinks</td></tr></table></h4>
+
+Case Study: Beverages Robust predictions 3
+=====
+<h4><table>
+<tr><td></td><td>lmrob.pred.4.train</td><td>price</td><td>product_desc</td><td>size</td><td>unit_desc</td><td>unit_count</td><td>container_desc</td><td>brand_desc</td><td>product_type_desc</td></tr>
+<tr><td>--</td><td>$27.06</td><td>$59.00</td><td>Distilled Water</td><td>50.766</td><td>Fluid Ounce</td><td>12</td><td>Bottle</td><td>Glaceau Smartwater</td><td>Bottled Water</td></tr>
+<tr><td>--</td><td>$22.29</td><td>$52.00</td><td>Distilled Water</td><td>16.9</td><td>Fluid Ounce</td><td>24</td><td>Plastic Bottle</td><td>Glaceau Smartwater</td><td>Bottled Water</td></tr>
+<tr><td>--</td><td>$14.93</td><td>$44.00</td><td>Orange</td><td>20</td><td>Fluid Ounce</td><td>24</td><td>Plastic Bottle</td><td>Fanta</td><td>Soft Drinks</td></tr>
+<tr><td>--</td><td>$17.89</td><td>$46.60</td><td>Mexican Drink Cola</td><td>12</td><td>Fluid Ounce</td><td>24</td><td>Glass Bottle</td><td>Coca-Cola</td><td>Cola</td></tr>
+<tr><td>--</td><td>$24.00</td><td>$52.29</td><td>Berry Berry Good Lemonade</td><td>59</td><td>Fluid Ounce</td><td>8</td><td>Plastic Bottle</td><td>Honest Kids</td><td>Kid's Fruit Juice</td></tr>
+</table>
+
+</h4>
+
+Case Study: Beverages Custom LM
+======
+Use beverage inliers to train model, and then predict on total - high rmse for outliers is good, meaning they will be flagged.
+
+<table>
+<tr><td></td></tr>
+<tr><td>  </td><td>rmse     </td><td>	 minres</td><td>  medres </td><td>maxres</td><td>	r-squared</td></tr>
+<tr><td>model.5	</td><td>11.854732</td><td>   	-74.660</td><td> -0.27940</td><td> 7.736e+00</td><td> 0.5728339 (inliers)</td></tr>
+<tr><td>bottom</td><td>     <h2>3.180307</h2></td><td>   	-74.660</td><td> -0.27940</td><td> 7.736e+00</td><td> 0.5728339</td></tr>
+<tr><td>top	</td><td><h2>224.454933</h2>  </td><td> 	-74.660</td><td> -0.27940</td><td> 7.736e+00</td><td> 0.5728339</td></tr>
+</table>
+
+Case Study: Beverages Conclusion
+====
+- Our data is severely biased causing fatal interruptions in complex model price prediction
+- Simple model price prediction is skewed for specific products or product types with low price coverage
+- Left skew in overall and category specific pricing makes lower bound outlier identification fuzzy
+
+Selling Out
+===
+
+- Identify invalid pricing based on its incompatibility with historical list and sales pricing
+- Predict pricing based on historical list pricing
+- Profit.. for real
+
+Next Steps
+===
+- Increase amount of data; splintering data by complex models resulted in too many singularities
+- Consider other models
+<ul><li>Bayes, logistic, decision tree/random forest, SVM
+<ul><li>depend on labelled data</ul>
+<li>k-means: Cluster pricing and use distance from mean as a final classifier
+<ul><li>Or, use to build clusters of products in close price ranges to train linear regression on</ul>
+</ul>
+- Use invalid pricing + other features to predict fradulent users
+
+
+
